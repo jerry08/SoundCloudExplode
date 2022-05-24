@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoundCloudExplode.Models.Playlist
+namespace SoundCloudExplode.Playlist
 {
     public partial class PlaylistInformation
     {

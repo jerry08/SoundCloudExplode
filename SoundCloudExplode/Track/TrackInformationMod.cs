@@ -1,4 +1,4 @@
-﻿namespace SoundCloudExplode.Models.SoundCloud
+﻿namespace SoundCloudExplode.Track
 {
     public class TrackInformationMod
     {

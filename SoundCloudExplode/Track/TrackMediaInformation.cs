@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace SoundCloudExplode.Models.SoundCloud
+namespace SoundCloudExplode.Track
 {
     public partial class TrackMediaInformation
     {
