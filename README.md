@@ -36,3 +36,22 @@ foreach (var track in playlist.Tracks)
     tracks.Add(trackInfo);
 }
 ```
+
+#### Downloading tracks
+
+```csharp
+using System;
+using System.IO;
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+
+var tracks = await soundCloud.GetTracksAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
+
+foreach (var track in tracks)
+{
+    var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
+
+    await soundcloud.Download(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
+}
+```
