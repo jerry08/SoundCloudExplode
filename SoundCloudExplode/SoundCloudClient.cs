@@ -7,6 +7,8 @@ using SoundCloudExplode.Utils;
 using HtmlAgilityPack;
 using System.Net;
 using System.IO;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace SoundCloudExplode
 {
@@ -15,19 +17,29 @@ namespace SoundCloudExplode
     /// </summary>
     public class SoundCloudClient
     {
-        private string ResolveEndpoint { get; } = "https://api-v2.SoundCloud.com/resolve";
-        private string TrackEndpoint { get; } = "https://api-v2.SoundCloud.com/tracks";
+        private string ResolveEndpoint { get; } = "https://api-v2.soundcloud.com/resolve";
+        private string TrackEndpoint { get; } = "https://api-v2.soundcloud.com/tracks";
+        //private string TrackEndpoint { get; } = "https://api.soundcloud.com/i1/tracks";
 
-        private string ClientId;
+        private string ClientId = "a3e059563d7fd3372b49b37f00a00bcf";
+        //private string ClientId = "a3dd183a357fcff9a6943c0d65664087";
 
-        private string BaseUrl = "https://SoundCloud.com";
+        private string BaseUrl = "https://soundcloud.com";
 
         /// <summary>
         /// Initializes an instance of <see cref="SoundCloudClient"/>.
         /// </summary>
         public SoundCloudClient()
         {
-            SetClientId();
+            //SetClientId();
+        }
+
+        /// <summary>
+        /// Initializes an instance of <see cref="SoundCloudClient"/>.
+        /// </summary>
+        public SoundCloudClient(string clientId)
+        {
+            ClientId = clientId;
         }
 
         private async void SetClientId()
@@ -36,63 +48,87 @@ namespace SoundCloudExplode
             string html = await Http.GetHtmlAsync(BaseUrl);
             document.LoadHtml(html);
 
-            var tt = document.DocumentNode.Descendants()
+            var script = document.DocumentNode.Descendants()
                 .Where(x => x.Name == "script").ToList();
 
-            var script_url = tt.LastOrDefault().Attributes["src"].Value;
+            var script_url = script.Last().Attributes["src"].Value;
 
             html = await Http.GetHtmlAsync(script_url);
 
             ClientId = html.Split(new string[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
         }
 
-
         /// <summary>
         /// Gets track information
         /// </summary>
-        public TrackInformation ResolveTrackUrl(string trackUrl)
+        public async Task<TrackInformation> GetTrackAsync(string? trackUrl)
         {
-            return JsonConvert.DeserializeObject<TrackInformation>(ResolveSoundcloudUrl(trackUrl));
+            if (trackUrl is null)
+                return new();
+
+            return JsonConvert.DeserializeObject<TrackInformation>(await ResolveSoundcloudUrl(trackUrl))!;
+        }
+
+        /// <summary>
+        /// Gets all tracks information
+        /// </summary>
+        public async Task<List<TrackInformation>> GetTracksAsync(string? trackUrl)
+        {
+            var tracks = new List<TrackInformation>();
+
+            if (trackUrl is null)
+                return tracks;
+
+            if (trackUrl.Contains("/search"))
+                return tracks;
+
+            //Paylist
+            if (trackUrl.Contains("/sets/"))
+            {
+                var playlist = await GetPlaylistAsync(trackUrl);
+                foreach (var track in playlist.Tracks)
+                {
+                    var trackUrl2 = await QueryTrackUrl(track.Id);
+                    var trackInfo = await GetTrackAsync(trackUrl2);
+
+                    tracks.Add(trackInfo);
+                }
+            }
+            else
+            {
+                tracks.Add(await GetTrackAsync(trackUrl));
+            }
+
+            return tracks;
         }
 
         /// <summary>
         /// Gets playlist information
         /// </summary>
-        public PlaylistInformation ResolvePlaylistUrl(string playlistUrl)
+        public async Task<PlaylistInformation> GetPlaylistAsync(string? playlistUrl)
         {
-            return JsonConvert.DeserializeObject<PlaylistInformation>(ResolveSoundcloudUrl(playlistUrl));
+            if (playlistUrl is null)
+                return new();
+
+            return JsonConvert.DeserializeObject<PlaylistInformation>(await ResolveSoundcloudUrl(playlistUrl))!;
         }
 
-        private string ResolveSoundcloudUrl(string soundcloudUrl)
+        private async Task<string> ResolveSoundcloudUrl(string soundcloudUrl)
         {
-            return Http.GetHtml($"{ResolveEndpoint}?url={soundcloudUrl}&client_id={ClientId}");
+            return await Http.GetHtmlAsync($"{ResolveEndpoint}?url={soundcloudUrl}&client_id={ClientId}");
         }
 
-        /// <summary>
-        /// Select at least one working transcoding
-        /// </summary>
-        public string QueryTrackTranscodings(Track.Transcoding[] trackTranscodings)
+        private async Task<string?> QueryTrackMp3(string trackM3u8)
         {
-            var trackUrl = trackTranscodings
-                .Where(x => x.Quality == "sq" && x.Format.MimeType.Contains("ogg") && x.Format.Protocol == "hls").FirstOrDefault()
-                .Url;
-            return trackUrl + $"?client_id={ClientId}";
-        }
-
-        public string QueryTrackM3u8(string trackTranscoding)
-        {
-            var trackMedia = Http.GetHtml(trackTranscoding);
-            return JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia).Url;
-        }
-
-        public string QueryTrackMp3(string trackM3u8)
-        {
-            var html = Http.GetHtml(trackM3u8);
+            var html = await Http.GetHtmlAsync(trackM3u8);
             var m3u8 = html.Split(',');
+
+            if (m3u8.Length <= 0)
+                return null;
 
             string link = "";
 
-            var last_stream = m3u8.LastOrDefault().Split('/');
+            var last_stream = m3u8.Last().Split('/');
             for (int i = 0; i < last_stream.Length; i++)
             {
                 if (last_stream[i] == "media")
@@ -106,23 +142,80 @@ namespace SoundCloudExplode
         }
 
         /// <summary>
-        /// Gets track information
+        /// Gets the download url from a track
         /// </summary>
-        public string QueryTrackUrl(long trackId)
+        public async Task<string?> GetDownloadUrl(TrackInformation track)
         {
-            var trackInformation = Http.GetHtml($"{TrackEndpoint}/{trackId}?client_id={ClientId}");
-            return JsonConvert.DeserializeObject<TrackInformation>(trackInformation).PermalinkUrl.ToString();
+            var trackUrl = "";
+
+            //progrssive/stream
+            var transcoding = track.Media.Transcodings
+                .Where(x => x.Quality == "sq" && x.Format.MimeType.Contains("audio/mpeg") && x.Format.Protocol == "progressive")
+                .FirstOrDefault();
+            
+            //hls
+            if (transcoding == null)
+            {
+                transcoding = track.Media.Transcodings
+                    .Where(x => x.Quality == "sq" && x.Format.MimeType.Contains("ogg") && x.Format.Protocol == "hls")
+                    .FirstOrDefault();
+            }
+
+            if (transcoding is null)
+                return null;
+
+            trackUrl += transcoding.Url.ToString() + $"?client_id={ClientId}";
+
+            var trackMedia = await Http.GetHtmlAsync(trackUrl);
+            var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
+            
+            if (track2 is null)
+                return null;
+
+            var trackMediaUrl = track2.Url;
+
+            if (trackMediaUrl.Contains(".m3u8"))
+            {
+                return await QueryTrackMp3(trackMediaUrl);
+            }
+            
+            return trackMediaUrl;
         }
 
-        public async void DownloadAsync(TrackInformation track, string filePath)
+        /// <summary>
+        /// Gets track information
+        /// </summary>
+        public async Task<string?> QueryTrackUrl(long trackId)
         {
-            var trackMediaInformation = QueryTrackTranscodings(track.Media.Transcodings);
-            var trackMediaUrl = QueryTrackM3u8(trackMediaInformation);
-            var mp3TrackMediaUrl = QueryTrackMp3(trackMediaUrl);
+            var trackInformation = await Http.GetHtmlAsync($"{TrackEndpoint}/{trackId}?client_id={ClientId}");
+            var track = JsonConvert.DeserializeObject<TrackInformation>(trackInformation);
+            
+            if (track is null)
+                return null;
 
-            var downloadRequest = (HttpWebRequest)WebRequest.Create(mp3TrackMediaUrl);
-            var downloadResponse = (HttpWebResponse)await downloadRequest.GetResponseAsync();
+            return track.PermalinkUrl.ToString();
+        }
+
+        /// <summary>
+        /// Downloads a track
+        /// </summary>
+        public async Task Download(TrackInformation track, string filePath)
+        {
+            var mp3TrackMediaUrl = await GetDownloadUrl(track);
+
+            if (mp3TrackMediaUrl is null)
+                return;
+
+            var downloadRequest = WebRequest.Create(mp3TrackMediaUrl);
+            var downloadResponse = downloadRequest.GetResponse();
             var stream = downloadResponse.GetResponseStream();
+
+            var dir = Path.GetDirectoryName(filePath);
+            if (dir is null)
+                return;
+
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
 
             //Create a stream for the file
             var file = File.Create(filePath);
@@ -139,13 +232,13 @@ namespace SoundCloudExplode
                 do
                 {
                     // Read data into the buffer.
-                    length = await stream.ReadAsync(buffer, 0, bytesToRead);
+                    length = stream.Read(buffer, 0, bytesToRead);
 
                     // and write it out to the response's output stream
-                    await file.WriteAsync(buffer, 0, length);
+                    file.Write(buffer, 0, length);
 
                     // Flush the data
-                    await stream.FlushAsync();
+                    stream.Flush();
 
                     //Clear the buffer
                     buffer = new byte[bytesToRead];

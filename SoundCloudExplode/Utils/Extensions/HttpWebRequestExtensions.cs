@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 
-namespace SoundCloudExplode.Utils
+namespace SoundCloudExplode.Utils.Extensions
 {
     public static class HttpWebRequestExtensions
     {
@@ -45,9 +45,9 @@ namespace SoundCloudExplode.Utils
                 if (property.PropertyType == typeof(DateTime))
                     property.SetValue(request, DateTime.Parse(value), null);
                 else if (property.PropertyType == typeof(bool))
-                    property.SetValue(request, Boolean.Parse(value), null);
+                    property.SetValue(request, bool.Parse(value), null);
                 else if (property.PropertyType == typeof(long))
-                    property.SetValue(request, Int64.Parse(value), null);
+                    property.SetValue(request, long.Parse(value), null);
                 else
                     property.SetValue(request, value, null);
             }
