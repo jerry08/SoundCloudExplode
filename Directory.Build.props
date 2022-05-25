@@ -5,8 +5,8 @@
     <Company>Jerro</Company>
     <Copyright>Copyright (C) Jerry Berry</Copyright>
     <LangVersion>latest</LangVersion>
-    <!--<Nullable>enable</Nullable>-->
-    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <Nullable>enable</Nullable>
+    <!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
