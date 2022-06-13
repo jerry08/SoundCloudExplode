@@ -20,7 +20,7 @@ namespace SoundCloudExplode.DemoConsole
 
             foreach (var track in tracks)
             {
-                await soundCloud.Download(track, $@"{Environment.CurrentDirectory}\Download\{ReplaceInvalidChars(track.Title)}.mp3");
+                await soundCloud.DownloadAsync(track, $@"{Environment.CurrentDirectory}\Download\{ReplaceInvalidChars(track.Title)}.mp3");
             }
 
             return 0;

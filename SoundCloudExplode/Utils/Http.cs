@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoundCloudExplode.Utils
@@ -21,9 +22,12 @@ namespace SoundCloudExplode.Utils
             ServicePointManager.DefaultConnectionLimit = 20;
         }
 
-        public static string GetHtml(string url, WebHeaderCollection headers = null)
+        public static string GetHtml(
+            string url,
+            CancellationToken cancellationToken = default,
+            WebHeaderCollection? headers = null)
         {
-            return AsyncHelper.RunSync(() => GetHtmlAsync(url, headers));
+            return AsyncHelper.RunSync(() => GetHtmlAsync(url, cancellationToken, headers));
 
             //var task = GetHtmlAsync(url, headers);
             //var task = Task.Run(() => GetHtmlAsync(url, headers));
@@ -31,8 +35,11 @@ namespace SoundCloudExplode.Utils
             //return task.Result;
         }
 
-        public async static Task<string> GetHtmlAsync(string url,
-            WebHeaderCollection headers = null, IEnumerable<Cookie> cookies = null)
+        public async static Task<string> GetHtmlAsync(
+            string url,
+            CancellationToken cancellationToken = default,
+            WebHeaderCollection? headers = null,
+            IEnumerable<Cookie>? cookies = null)
         {
             url = url.Replace(" ", "%20");
 
@@ -40,12 +47,12 @@ namespace SoundCloudExplode.Utils
             {
                 try
                 {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                    if (headers != null)
+                    var request = (HttpWebRequest)WebRequest.Create(url);
+                    if (headers is not null)
                     {
                         for (int j = 0; j < headers.Count; j++)
                         {
-                            request.SetRawHeader(headers.Keys[j], headers[j]);
+                            request.SetRawHeader(headers.Keys[j]!, headers[j]!);
                         }
                     }
 
@@ -59,9 +66,10 @@ namespace SoundCloudExplode.Utils
                         }
                     }
 
-                    HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
-                    Stream receiveStream = response.GetResponseStream();
-                    StreamReader streamReader = null;
+                    var response = (HttpWebResponse)await request.GetResponseAsync()
+                        .WithCancellation(cancellationToken, request.Abort, true);
+                    var receiveStream = response.GetResponseStream();
+                    StreamReader? streamReader = null;
 
                     if (string.IsNullOrEmpty(response.CharacterSet))
                     {
@@ -72,10 +80,11 @@ namespace SoundCloudExplode.Utils
                         streamReader = new StreamReader(receiveStream, Encoding.GetEncoding(response.CharacterSet));
                     }
 
-                    string html = await streamReader.ReadToEndAsync();
+                    string html = await streamReader.ReadToEndAsync()
+                        .WithCancellation(cancellationToken, streamReader.Close, true);
 
-                    streamReader.Close();
-                    response.Close();
+                    streamReader?.Close();
+                    response?.Close();
 
                     return html;
                 }

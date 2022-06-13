@@ -9,6 +9,7 @@ using System.Net;
 using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace SoundCloudExplode
 {
@@ -42,10 +43,13 @@ namespace SoundCloudExplode
             ClientId = clientId;
         }
 
-        private async void SetClientId()
+        /// <summary>
+        /// Sets Default ClientId
+        /// </summary>
+        public async void SetClientId(CancellationToken cancellationToken = default)
         {
             var document = new HtmlDocument();
-            string html = await Http.GetHtmlAsync(BaseUrl);
+            string html = await Http.GetHtmlAsync(BaseUrl, cancellationToken);
             document.LoadHtml(html);
 
             var script = document.DocumentNode.Descendants()
@@ -53,7 +57,7 @@ namespace SoundCloudExplode
 
             var script_url = script.Last().Attributes["src"].Value;
 
-            html = await Http.GetHtmlAsync(script_url);
+            html = await Http.GetHtmlAsync(script_url, cancellationToken);
 
             ClientId = html.Split(new string[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
         }
@@ -61,12 +65,14 @@ namespace SoundCloudExplode
         /// <summary>
         /// Gets track information
         /// </summary>
-        public async Task<TrackInformation> GetTrackAsync(string? trackUrl)
+        public async Task<TrackInformation> GetTrackAsync(
+            string? trackUrl,
+            CancellationToken cancellationToken = default)
         {
             if (trackUrl is null)
                 return new();
 
-            return JsonConvert.DeserializeObject<TrackInformation>(await ResolveSoundcloudUrl(trackUrl))!;
+            return JsonConvert.DeserializeObject<TrackInformation>(await ResolveSoundcloudUrlAsync(trackUrl, cancellationToken))!;
         }
 
         /// <summary>
@@ -88,7 +94,7 @@ namespace SoundCloudExplode
                 var playlist = await GetPlaylistAsync(trackUrl);
                 foreach (var track in playlist.Tracks)
                 {
-                    var trackUrl2 = await QueryTrackUrl(track.Id);
+                    var trackUrl2 = await QueryTrackUrlAsync(track.Id);
                     var trackInfo = await GetTrackAsync(trackUrl2);
 
                     tracks.Add(trackInfo);
@@ -105,22 +111,28 @@ namespace SoundCloudExplode
         /// <summary>
         /// Gets playlist information
         /// </summary>
-        public async Task<PlaylistInformation> GetPlaylistAsync(string? playlistUrl)
+        public async Task<PlaylistInformation> GetPlaylistAsync(
+            string? playlistUrl,
+            CancellationToken cancellationToken = default)
         {
             if (playlistUrl is null)
                 return new();
 
-            return JsonConvert.DeserializeObject<PlaylistInformation>(await ResolveSoundcloudUrl(playlistUrl))!;
+            return JsonConvert.DeserializeObject<PlaylistInformation>(await ResolveSoundcloudUrlAsync(playlistUrl, cancellationToken))!;
         }
 
-        private async Task<string> ResolveSoundcloudUrl(string soundcloudUrl)
+        private async Task<string> ResolveSoundcloudUrlAsync(
+            string soundcloudUrl,
+            CancellationToken cancellationToken = default)
         {
-            return await Http.GetHtmlAsync($"{ResolveEndpoint}?url={soundcloudUrl}&client_id={ClientId}");
+            return await Http.GetHtmlAsync($"{ResolveEndpoint}?url={soundcloudUrl}&client_id={ClientId}", cancellationToken);
         }
 
-        private async Task<string?> QueryTrackMp3(string trackM3u8)
+        private async Task<string?> QueryTrackMp3Async(
+            string trackM3u8,
+            CancellationToken cancellationToken = default)
         {
-            var html = await Http.GetHtmlAsync(trackM3u8);
+            var html = await Http.GetHtmlAsync(trackM3u8, cancellationToken);
             var m3u8 = html.Split(',');
 
             if (m3u8.Length <= 0)
@@ -144,7 +156,9 @@ namespace SoundCloudExplode
         /// <summary>
         /// Gets the download url from a track
         /// </summary>
-        public async Task<string?> GetDownloadUrl(TrackInformation track)
+        public async Task<string?> GetDownloadUrlAsync(
+            TrackInformation track,
+            CancellationToken cancellationToken = default)
         {
             var trackUrl = "";
 
@@ -166,7 +180,7 @@ namespace SoundCloudExplode
 
             trackUrl += transcoding.Url.ToString() + $"?client_id={ClientId}";
 
-            var trackMedia = await Http.GetHtmlAsync(trackUrl);
+            var trackMedia = await Http.GetHtmlAsync(trackUrl, cancellationToken);
             var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
             
             if (track2 is null)
@@ -176,7 +190,7 @@ namespace SoundCloudExplode
 
             if (trackMediaUrl.Contains(".m3u8"))
             {
-                return await QueryTrackMp3(trackMediaUrl);
+                return await QueryTrackMp3Async(trackMediaUrl, cancellationToken);
             }
             
             return trackMediaUrl;
@@ -185,13 +199,21 @@ namespace SoundCloudExplode
         /// <summary>
         /// Gets track information
         /// </summary>
-        public async Task<string?> QueryTrackUrl(long trackId)
+        public async Task<string?> QueryTrackUrlAsync(
+            long trackId,
+            CancellationToken cancellationToken = default)
         {
-            var trackInformation = await Http.GetHtmlAsync($"{TrackEndpoint}/{trackId}?client_id={ClientId}");
-            var track = JsonConvert.DeserializeObject<TrackInformation>(trackInformation);
-            
-            if (track is null)
+            var trackInfoHtml = await Http.GetHtmlAsync($"{TrackEndpoint}/{trackId}?client_id={ClientId}", cancellationToken);
+            if (trackInfoHtml is null)
+            {
                 return null;
+            }
+
+            var track = JsonConvert.DeserializeObject<TrackInformation>(trackInfoHtml);
+            if (track is null)
+            {
+                return null;
+            }
 
             return track.PermalinkUrl.ToString();
         }
@@ -199,9 +221,13 @@ namespace SoundCloudExplode
         /// <summary>
         /// Downloads a track
         /// </summary>
-        public async Task Download(TrackInformation track, string filePath)
+        public async Task DownloadAsync(
+            TrackInformation track,
+            string filePath,
+            IProgress<double>? progress = null,
+            CancellationToken cancellationToken = default)
         {
-            var mp3TrackMediaUrl = await GetDownloadUrl(track);
+            var mp3TrackMediaUrl = await GetDownloadUrlAsync(track, cancellationToken);
 
             if (mp3TrackMediaUrl is null)
                 return;
