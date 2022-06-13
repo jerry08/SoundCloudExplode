@@ -30,7 +30,7 @@ var tracks = new List<TrackInformation>();
 var playlist = await soundcloud.GetPlaylistAsync("https://soundcloud.com/tommy-enjoy/sets/aimer");
 foreach (var track in playlist.Tracks)
 {
-    var trackUrl = await soundcloud.QueryTrackUrl(track.Id);
+    var trackUrl = await soundcloud.QueryTrackUrlAsync(track.Id);
     var trackInfo = await soundcloud.GetTrackAsync(trackUrl);
 
     tracks.Add(trackInfo);
@@ -52,6 +52,6 @@ foreach (var track in tracks)
 {
     var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
 
-    await soundcloud.Download(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
+    await soundcloud.DownloadAsync(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
 }
 ```
