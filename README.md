@@ -30,8 +30,8 @@ var tracks = new List<TrackInformation>();
 var playlist = await soundcloud.GetPlaylistAsync("https://soundcloud.com/tommy-enjoy/sets/aimer");
 foreach (var track in playlist.Tracks)
 {
-    var trackUrl = await soundCloud.QueryTrackUrlAsync(track.Id);
-    var trackInfo = await soundCloud.GetTrackAsync(trackUrl);
+    var trackUrl = await soundcloud.QueryTrackUrl(track.Id);
+    var trackInfo = await soundcloud.GetTrackAsync(trackUrl);
 
     tracks.Add(trackInfo);
 }
@@ -46,12 +46,12 @@ using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
 
-var tracks = await soundCloud.GetTracksAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
+var tracks = await soundcloud.GetTracksAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
 foreach (var track in tracks)
 {
     var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
 
-    await soundcloud.DownloadAsync(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
+    await soundcloud.Download(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
 }
 ```
