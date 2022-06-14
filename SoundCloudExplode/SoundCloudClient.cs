@@ -78,7 +78,9 @@ namespace SoundCloudExplode
         /// <summary>
         /// Gets all tracks information
         /// </summary>
-        public async Task<List<TrackInformation>> GetTracksAsync(string? trackUrl)
+        public async Task<List<TrackInformation>> GetTracksAsync(
+            string? trackUrl,
+            CancellationToken cancellationToken = default)
         {
             var tracks = new List<TrackInformation>();
 
@@ -94,15 +96,15 @@ namespace SoundCloudExplode
                 var playlist = await GetPlaylistAsync(trackUrl);
                 foreach (var track in playlist.Tracks)
                 {
-                    var trackUrl2 = await QueryTrackUrlAsync(track.Id);
-                    var trackInfo = await GetTrackAsync(trackUrl2);
+                    var trackUrl2 = await QueryTrackUrlAsync(track.Id, cancellationToken);
+                    var trackInfo = await GetTrackAsync(trackUrl2, cancellationToken);
 
                     tracks.Add(trackInfo);
                 }
             }
             else
             {
-                tracks.Add(await GetTrackAsync(trackUrl));
+                tracks.Add(await GetTrackAsync(trackUrl, cancellationToken));
             }
 
             return tracks;
