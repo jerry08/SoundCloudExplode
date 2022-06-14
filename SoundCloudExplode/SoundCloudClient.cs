@@ -93,7 +93,7 @@ namespace SoundCloudExplode
             //Paylist
             if (trackUrl.Contains("/sets/"))
             {
-                var playlist = await GetPlaylistAsync(trackUrl);
+                var playlist = await GetPlaylistAsync(trackUrl, cancellationToken);
                 foreach (var track in playlist.Tracks)
                 {
                     var trackUrl2 = await QueryTrackUrlAsync(track.Id, cancellationToken);
@@ -250,6 +250,8 @@ namespace SoundCloudExplode
 
             try
             {
+                double totProgress = 0;
+
                 //This controls how many bytes to read at a time and send to the client
                 int bytesToRead = 10000;
 
@@ -270,6 +272,10 @@ namespace SoundCloudExplode
 
                     //Clear the buffer
                     buffer = new byte[bytesToRead];
+
+                    totProgress = (double)stream.Position / (double)length * 100;
+
+                    progress?.Report(totProgress / 100);
                 } while (length > 0); //Repeat until no data is read
             }
             finally
