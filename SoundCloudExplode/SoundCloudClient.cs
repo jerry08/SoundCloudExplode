@@ -10,6 +10,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
+using SoundCloudExplode.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace SoundCloudExplode
 {
@@ -26,6 +28,11 @@ namespace SoundCloudExplode
         //private string ClientId = "a3dd183a357fcff9a6943c0d65664087";
 
         private string BaseUrl = "https://soundcloud.com";
+
+        //private readonly Regex PlaylistRegex = new (@"soundcloud\..+?/(.*?)\/sets\/.+");
+        //private readonly Regex TrackRegex = new (@"soundcloud\..+?/(.*?)\/sets\/.+");
+        private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/[a-zA-Z]+");
+        private readonly Regex TrackRegex = new(@"soundcloud\..+?\/(.*?)\/[a-zA-Z0-9~@#$^*()_+=[\]{}|\\,.?: -]+");
 
         /// <summary>
         /// Initializes an instance of <see cref="SoundCloudClient"/>.
@@ -70,7 +77,9 @@ namespace SoundCloudExplode
             CancellationToken cancellationToken = default)
         {
             if (trackUrl is null)
+            {
                 return new();
+            }
 
             return JsonConvert.DeserializeObject<TrackInformation>(await ResolveSoundcloudUrlAsync(trackUrl, cancellationToken))!;
         }
@@ -85,15 +94,23 @@ namespace SoundCloudExplode
             var tracks = new List<TrackInformation>();
 
             if (trackUrl is null)
+            {
                 return tracks;
+            }
 
-            if (trackUrl.Contains("/search"))
-                return tracks;
+            // Only consider URLs when parsing IDs.
+            // All other queries are treated as search queries.
+            var isUrl = Uri.IsWellFormedUriString(trackUrl, UriKind.Absolute);
 
-            //Paylist
-            if (trackUrl.Contains("/sets/"))
+            // Playlist
+            if (isUrl && PlaylistRegex.IsMatch(trackUrl))
             {
                 var playlist = await GetPlaylistAsync(trackUrl, cancellationToken);
+                if (playlist is null || playlist.Tracks is null)
+                {
+                    return tracks;
+                }
+
                 foreach (var track in playlist.Tracks)
                 {
                     var trackUrl2 = await QueryTrackUrlAsync(track.Id, cancellationToken);
@@ -102,7 +119,7 @@ namespace SoundCloudExplode
                     tracks.Add(trackInfo);
                 }
             }
-            else
+            else if (isUrl && TrackRegex.IsMatch(trackUrl))
             {
                 tracks.Add(await GetTrackAsync(trackUrl, cancellationToken));
             }
@@ -118,7 +135,9 @@ namespace SoundCloudExplode
             CancellationToken cancellationToken = default)
         {
             if (playlistUrl is null)
+            {
                 return new();
+            }
 
             return JsonConvert.DeserializeObject<PlaylistInformation>(await ResolveSoundcloudUrlAsync(playlistUrl, cancellationToken))!;
         }
@@ -138,7 +157,9 @@ namespace SoundCloudExplode
             var m3u8 = html.Split(',');
 
             if (m3u8.Length <= 0)
+            {
                 return null;
+            }
 
             string link = "";
 
@@ -162,39 +183,58 @@ namespace SoundCloudExplode
             TrackInformation track,
             CancellationToken cancellationToken = default)
         {
+            if (track.Policy?.ToLower() == "block")
+            {
+                throw new TrackUnavailableException("This track is not available in your country");
+            }
+
+            if (track.Media == null
+                || track.Media.Transcodings == null
+                || track.Media.Transcodings.Length <= 0)
+            {
+                throw new TrackUnavailableException("No transcodings found");
+            }
+
             var trackUrl = "";
 
             //progrssive/stream
             var transcoding = track.Media.Transcodings
-                .Where(x => x.Quality == "sq" && x.Format.MimeType.Contains("audio/mpeg") && x.Format.Protocol == "progressive")
+                .Where(x => x.Quality == "sq"
+                && x.Format is not null && x.Format.MimeType is not null
+                && x.Format.MimeType.Contains("audio/mpeg") && x.Format.Protocol == "progressive")
                 .FirstOrDefault();
-            
+
             //hls
             if (transcoding == null)
             {
                 transcoding = track.Media.Transcodings
-                    .Where(x => x.Quality == "sq" && x.Format.MimeType.Contains("ogg") && x.Format.Protocol == "hls")
-                    .FirstOrDefault();
+                    .Where(x => x.Quality == "sq"
+                    && x.Format is not null && x.Format.MimeType is not null
+                    && x.Format.MimeType.Contains("ogg") && x.Format.Protocol == "hls")
+                   .FirstOrDefault();
             }
 
-            if (transcoding is null)
+            if (transcoding is null || transcoding.Url is null)
+            {
                 return null;
+            }
 
             trackUrl += transcoding.Url.ToString() + $"?client_id={ClientId}";
 
             var trackMedia = await Http.GetHtmlAsync(trackUrl, null, null, cancellationToken);
             var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
-            
+
             if (track2 is null)
+            {
                 return null;
+            }
 
-            var trackMediaUrl = track2.Url;
-
+            var trackMediaUrl = track2.Url ?? "";
             if (trackMediaUrl.Contains(".m3u8"))
             {
                 return await QueryTrackMp3Async(trackMediaUrl, cancellationToken);
             }
-            
+
             return trackMediaUrl;
         }
 
@@ -212,7 +252,7 @@ namespace SoundCloudExplode
             }
 
             var track = JsonConvert.DeserializeObject<TrackInformation>(trackInfoHtml);
-            if (track is null)
+            if (track is null || track.PermalinkUrl is null)
             {
                 return null;
             }
@@ -230,11 +270,12 @@ namespace SoundCloudExplode
             CancellationToken cancellationToken = default)
         {
             var mp3TrackMediaUrl = await GetDownloadUrlAsync(track, cancellationToken);
-
             if (mp3TrackMediaUrl is null)
+            {
                 return;
+            }
 
-            var totalLength = await Http.GetFileSizeAsync(mp3TrackMediaUrl);
+            var totalLength = await Http.GetFileSizeAsync(mp3TrackMediaUrl, cancellationToken);
 
             var downloadRequest = WebRequest.Create(mp3TrackMediaUrl);
             var downloadResponse = downloadRequest.GetResponse();
@@ -242,7 +283,9 @@ namespace SoundCloudExplode
 
             var dir = Path.GetDirectoryName(filePath);
             if (dir is null)
+            {
                 return;
+            }
 
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);

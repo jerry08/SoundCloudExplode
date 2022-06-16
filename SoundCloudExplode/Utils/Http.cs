@@ -28,7 +28,7 @@ namespace SoundCloudExplode.Utils
 
         public static HttpClient Client => HttpClientLazy.Value;
 
-        public const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36";
+        public const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246";
 
         public static int NumberOfRetries = 1;
         public static int DelayOnRetry = 500;
@@ -39,11 +39,6 @@ namespace SoundCloudExplode.Utils
             CancellationToken cancellationToken = default)
         {
             return AsyncHelper.RunSync(() => GetHtmlAsync(url, headers, null, cancellationToken));
-
-            //var task = GetHtmlAsync(url, headers);
-            //var task = Task.Run(() => GetHtmlAsync(url, headers));
-            //task.Wait();
-            //return task.Result;
         }
 
         public async static Task<string> GetHtmlAsync(
@@ -91,7 +86,7 @@ namespace SoundCloudExplode.Utils
                         streamReader = new StreamReader(receiveStream, Encoding.GetEncoding(response.CharacterSet));
                     }
 
-                    string html = await streamReader.ReadToEndAsync()
+                    var html = await streamReader.ReadToEndAsync()
                         .WithCancellation(cancellationToken, streamReader.Close, true);
 
                     streamReader?.Close();

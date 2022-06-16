@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace SoundCloudExplode.Utils.Extensions
 {
-    public static class HttpWebRequestExtensions
+    internal static class HttpWebRequestExtensions
     {
         static string[] RestrictedHeaders = new string[] {
             "Accept",
@@ -24,15 +24,15 @@ namespace SoundCloudExplode.Utils.Extensions
             "User-Agent"
         };
 
-        static Dictionary<string, PropertyInfo> HeaderProperties = new Dictionary<string, PropertyInfo>(StringComparer.OrdinalIgnoreCase);
+        static readonly Dictionary<string, PropertyInfo> HeaderProperties = new Dictionary<string, PropertyInfo>(StringComparer.OrdinalIgnoreCase);
 
         static HttpWebRequestExtensions()
         {
-            Type type = typeof(HttpWebRequest);
+            var type = typeof(HttpWebRequest);
             foreach (string header in RestrictedHeaders)
             {
                 string propertyName = header.Replace("-", "");
-                PropertyInfo headerProperty = type.GetProperty(propertyName);
+                var headerProperty = type.GetProperty(propertyName)!;
                 HeaderProperties[header] = headerProperty;
             }
         }
