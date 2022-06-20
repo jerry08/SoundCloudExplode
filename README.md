@@ -1,4 +1,7 @@
 ﻿# SoundCloudExplode
+[![Version](https://img.shields.io/nuget/v/SoundCloudExplode.svg)](https://nuget.org/packages/SoundCloudExplode)
+[![Downloads](https://img.shields.io/nuget/dt/SoundCloudExplode.svg)](https://nuget.org/packages/SoundCloudExplode)
+
 **SoundCloudExplode** is a library that provides an interface to query metadata of SoundCloud tracks and playlistschannels, as well as to resolve and download streams.
 
 ### 🌟STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF THE APPLICATION!
