@@ -18,6 +18,10 @@ Create an instance of this class and use the provided operations to send request
 
 ### Tracks
 
+#### Retrieving track metadata
+
+To retrieve the metadata associated with a Soundcloud track, call `Tracks.GetAsync(...)`:
+
 ```csharp
 using SoundCloudExplode;
 
@@ -25,17 +29,8 @@ var soundcloud = new SoundCloudClient();
 
 var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
-var tracks = await soundcloud.GetTracksAsync("https://soundcloud.com/tommy-enjoy/sets/aimer");
-//Or
-var tracks = new List<TrackInformation>();
-var playlist = await soundcloud.GetPlaylistAsync("https://soundcloud.com/tommy-enjoy/sets/aimer");
-foreach (var track in playlist.Tracks)
-{
-    var trackUrl = await soundcloud.QueryTrackUrlAsync(track.Id);
-    var trackInfo = await soundcloud.GetTrackAsync(trackUrl);
-
-    tracks.Add(trackInfo);
-}
+var title = track.Title;
+var duration = track.Duration;
 ```
 
 ### Playlists
@@ -79,6 +74,42 @@ var tracksSubset = await soundcloud.Playlists
     .CollectAsync(20);
 ```
 
+You can also enumerate the tracks iteratively without waiting for the whole list to load:
+
+```csharp
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+
+await foreach (var track in soundcloud.Playlists.GetTracksAsync(
+    "https://soundcloud.com/tommy-enjoy/sets/aimer"
+))
+{
+    var title = track.Title;
+    var duration = track.Duration;
+}
+```
+
+If you need precise control over how many requests you send to Soundcloud, use `Playlists.GetTrackBatchesAsync(...)` which returns tracks wrapped in batches:
+
+```csharp
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+
+// Each batch corresponds to one request
+await foreach (var batch in soundcloud.Playlists.GetTrackBatchesAsync(
+    "https://soundcloud.com/tommy-enjoy/sets/aimer"
+))
+{
+    foreach (var track in batch.Items)
+    {
+        var title = track.Title;
+        var duration = track.Duration;
+    }
+}
+```
+
 #### Downloading tracks
 
 ```csharp
@@ -88,12 +119,24 @@ using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
 
-var tracks = await soundcloud.GetTracksAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
+var track = await soundcloud.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
-foreach (var track in tracks)
-{
-    var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
+var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
 
-    await soundcloud.DownloadAsync(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
-}
+await soundcloud.DownloadAsync(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
+```
+
+
+You can request the download url for a particular track by calling `Tracks.GetDownloadUrlAsync(...)`:
+
+```csharp
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+
+var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
+
+var downloadUrl = await soundcloud.Tracks.GetDownloadUrlAsync(
+    track
+);
 ```

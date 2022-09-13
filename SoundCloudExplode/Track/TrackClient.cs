@@ -172,4 +172,84 @@ public class TrackClient
         string url,
         CancellationToken cancellationToken = default) =>
         GetTrackBatchesAsync(url, cancellationToken).FlattenAsync();
+
+    private async ValueTask<string?> QueryTrackMp3Async(
+        string trackM3u8,
+        CancellationToken cancellationToken = default)
+    {
+        var html = await _http.GetAsync(trackM3u8, cancellationToken);
+        var m3u8 = html.Split(',');
+
+        if (m3u8.Length <= 0)
+            return null;
+
+        var link = "";
+
+        var last_stream = m3u8.Last().Split('/');
+        for (int i = 0; i < last_stream.Length; i++)
+        {
+            if (last_stream[i] == "media")
+            {
+                last_stream[i + 1] = "0";
+                link = string.Join("/", last_stream).Split('\n')[1];
+            }
+        }
+
+        return link;
+    }
+
+    /// <summary>
+    /// Gets the download url from a track
+    /// </summary>
+    public async ValueTask<string?> GetDownloadUrlAsync(
+        TrackInformation track,
+        CancellationToken cancellationToken = default)
+    {
+        if (track.Policy?.ToLower() == "block")
+        {
+            throw new TrackUnavailableException("This track is not available in your country");
+        }
+
+        if (track.Media is null
+            || track.Media.Transcodings is null
+            || track.Media.Transcodings.Length <= 0)
+        {
+            throw new TrackUnavailableException("No transcodings found");
+        }
+
+        var trackUrl = "";
+
+        //progrssive/stream
+        var transcoding = track.Media.Transcodings
+            .Where(x => x.Quality == "sq"
+                && x.Format is not null && x.Format.MimeType is not null
+                && x.Format.MimeType.Contains("audio/mpeg") && x.Format.Protocol == "progressive")
+            .FirstOrDefault();
+
+        //hls
+        transcoding ??= track.Media.Transcodings
+            .Where(x => x.Quality == "sq"
+                && x.Format is not null && x.Format.MimeType is not null
+                && x.Format.MimeType.Contains("ogg") && x.Format.Protocol == "hls")
+            .FirstOrDefault();
+
+        if (transcoding is null || transcoding.Url is null)
+            return null;
+
+        trackUrl += transcoding.Url.ToString() + $"?client_id={_client.ClientId}";
+
+        var trackMedia = await _http.GetAsync(trackUrl, cancellationToken);
+        var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
+
+        if (track2 is null)
+            return null;
+
+        var trackMediaUrl = track2.Url ?? "";
+        if (trackMediaUrl.Contains(".m3u8"))
+        {
+            return await QueryTrackMp3Async(trackMediaUrl, cancellationToken);
+        }
+
+        return trackMediaUrl;
+    }
 }
