@@ -38,6 +38,47 @@ foreach (var track in playlist.Tracks)
 }
 ```
 
+### Playlists
+
+#### Retrieving playlist metadata
+
+You can get the metadata associated with a Soundcloud playlist by calling `Playlists.GetAsync(...)` method:
+
+```csharp
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+
+var playlist = await soundcloud.Playlists.GetAsync(
+    "https://soundcloud.com/tommy-enjoy/sets/aimer"
+);
+
+var title = playlist.Title;
+var artworkUrl = playlist.ArtworkUrl;
+...
+```
+
+#### Getting tracks included in a playlist
+
+To get the tracks included in a playlist, call `Playlists.GetTracksAsync(...)`:
+
+```csharp
+using SoundCloudExplode;
+using SoundCloudExplode.Common;
+
+var soundcloud = new SoundCloudClient();
+
+// Get all playlist tracks
+var tracks = await soundcloud.Playlists.GetTracksAsync(
+    "https://soundcloud.com/tommy-enjoy/sets/aimer"
+);
+
+// Get only the first 20 playlist tracks
+var tracksSubset = await soundcloud.Playlists
+    .GetTracksAsync("https://soundcloud.com/tommy-enjoy/sets/aimer")
+    .CollectAsync(20);
+```
+
 #### Downloading tracks
 
 ```csharp
