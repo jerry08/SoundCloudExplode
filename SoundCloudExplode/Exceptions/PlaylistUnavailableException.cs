@@ -3,7 +3,7 @@
 /// <summary>
 /// Exception thrown when the requested playlist is unavailable.
 /// </summary>
-public class PlaylistUnavailableException : SoundCloudExplodeException
+public class PlaylistUnavailableException : SoundcloudExplodeException
 {
     /// <summary>
     /// Initializes an instance of <see cref="PlaylistUnavailableException"/>.

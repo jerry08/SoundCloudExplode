@@ -5,13 +5,13 @@ namespace SoundCloudExplode.Exceptions;
 /// <summary>
 /// Exception thrown within <see cref="SoundCloudExplode"/>.
 /// </summary>
-public class SoundCloudExplodeException : Exception
+public class SoundcloudExplodeException : Exception
 {
     /// <summary>
-    /// Initializes an instance of <see cref="SoundCloudExplodeException"/>.
+    /// Initializes an instance of <see cref="SoundcloudExplodeException"/>.
     /// </summary>
     /// <param name="message"></param>
-    public SoundCloudExplodeException(string message) : base(message)
+    public SoundcloudExplodeException(string message) : base(message)
     {
     }
 }

@@ -3,7 +3,7 @@
 /// <summary>
 /// Exception thrown when the requested track is unavailable/blocked from country.
 /// </summary>
-public class TrackUnavailableException : SoundCloudExplodeException
+public class TrackUnavailableException : SoundcloudExplodeException
 {
     /// <summary>
     /// Initializes an instance of <see cref="TrackUnavailableException"/>.

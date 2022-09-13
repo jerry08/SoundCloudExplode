@@ -20,11 +20,9 @@ using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
 
-var single_track = await soundcloud.GetTrackAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
-//Or
-var single_track = await soundcloud.GetTracksAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
+var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
-var playlist_tracks = await soundcloud.GetTracksAsync("https://soundcloud.com/tommy-enjoy/sets/aimer");
+var tracks = await soundcloud.GetTracksAsync("https://soundcloud.com/tommy-enjoy/sets/aimer");
 //Or
 var tracks = new List<TrackInformation>();
 var playlist = await soundcloud.GetPlaylistAsync("https://soundcloud.com/tommy-enjoy/sets/aimer");

@@ -1,10 +1,9 @@
 ﻿using Newtonsoft.Json;
 
-namespace SoundCloudExplode.Track
+namespace SoundCloudExplode.Track;
+
+public partial class TrackMediaInformation
 {
-    public partial class TrackMediaInformation
-    {
-        [JsonProperty("url")]
-        public string? Url { get; set; }
-    }
+    [JsonProperty("url")]
+    public string? Url { get; set; }
 }
