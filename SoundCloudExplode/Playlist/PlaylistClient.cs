@@ -80,17 +80,19 @@ public class PlaylistClient
         if (playlist is null || playlist.Tracks is null)
             yield break;
 
-        var tracks = new List<TrackInformation>();
+        var encounteredIds = new HashSet<long>();
 
         foreach (var track in playlist.Tracks)
         {
+            // Don't yield the same track twice
+            if (!encounteredIds.Add(track.Id))
+                continue;
+
             var trackInfo = await _client.Tracks.GetByIdAsync(track.Id, cancellationToken);
             if (trackInfo is null)
                 continue;
 
-            tracks.Add(trackInfo);
-
-            yield return Batch.Create(tracks);
+            yield return Batch.Create(new[] { trackInfo });
         }
     }
 
