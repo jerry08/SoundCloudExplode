@@ -102,6 +102,15 @@ public class SoundCloudClient
         string soundcloudUrl,
         CancellationToken cancellationToken = default)
     {
+        var host = new Uri(soundcloudUrl).Host;
+        if (host.StartsWith("m."))
+        {
+            var builder = new UriBuilder(soundcloudUrl);
+            builder.Host = host.Substring(2);
+
+            soundcloudUrl = builder.Uri.ToString();
+        }
+
         return await _http.GetAsync($"{Constants.ResolveEndpoint}?url={soundcloudUrl}&client_id={ClientId}", cancellationToken);
     }
 

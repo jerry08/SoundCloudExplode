@@ -5,7 +5,7 @@ using SoundCloudExplode.DemoConsole.Utils;
 
 namespace SoundCloudExplode.DemoConsole;
 
-internal class Program
+internal static class Program
 {
     public static async Task Main()
     {

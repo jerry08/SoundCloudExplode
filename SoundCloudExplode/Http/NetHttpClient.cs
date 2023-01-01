@@ -33,7 +33,7 @@ internal class NetHttpClient
             //    "User-Agent",
             //    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36"
             //);
-            
+
             request.Headers.Add(
                 "User-Agent",
                 Utils.Http.ChromeUserAgent()
@@ -59,18 +59,15 @@ internal class NetHttpClient
         //    );
         //}
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
+        return !response.IsSuccessStatusCode
+            ? throw new HttpRequestException(
                 $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})." +
                 Environment.NewLine +
                 "Request:" +
                 Environment.NewLine +
                 request
-            );
-        }
-
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+            )
+            : await response.Content.ReadAsStringAsync(cancellationToken);
     }
 
     public async ValueTask<long?> GetFileSizeAsync(
@@ -92,7 +89,7 @@ internal class NetHttpClient
             //    "User-Agent",
             //    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36"
             //);
-            
+
             request.Headers.Add(
                 "User-Agent",
                 Utils.Http.ChromeUserAgent()
@@ -108,17 +105,14 @@ internal class NetHttpClient
             cancellationToken
         );
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
+        return !response.IsSuccessStatusCode
+            ? throw new HttpRequestException(
                 $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})." +
                 Environment.NewLine +
                 "Request:" +
                 Environment.NewLine +
                 request
-            );
-        }
-
-        return response.Content.Headers.ContentLength;
+            )
+            : response.Content.Headers.ContentLength;
     }
 }

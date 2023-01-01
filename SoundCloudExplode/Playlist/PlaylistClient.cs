@@ -41,13 +41,9 @@ public class PlaylistClient
     /// <exception cref="SoundcloudExplodeException"></exception>
     public bool IsUrlValid(string url)
     {
+        url = url.ToLower();
         var isUrl = Uri.IsWellFormedUriString(url, UriKind.Absolute);
-        if (isUrl && PlaylistRegex.IsMatch(url))
-        {
-            return true;
-        }
-
-        return false;
+        return isUrl && PlaylistRegex.IsMatch(url);
     }
 
     /// <summary>

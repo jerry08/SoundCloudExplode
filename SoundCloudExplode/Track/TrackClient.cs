@@ -43,13 +43,9 @@ public class TrackClient
     /// <exception cref="SoundcloudExplodeException"></exception>
     public bool IsUrlValid(string url)
     {
+        url = url.ToLower();
         var isUrl = Uri.IsWellFormedUriString(url, UriKind.Absolute);
-        if (isUrl && (TracksRegex.IsMatch(url) || SingleTrackRegex.IsMatch(url)))
-        {
-            return true;
-        }
-
-        return false;
+        return isUrl && (TracksRegex.IsMatch(url) || SingleTrackRegex.IsMatch(url));
     }
 
     /// <summary>
@@ -60,10 +56,9 @@ public class TrackClient
         CancellationToken cancellationToken = default)
     {
         if (!IsUrlValid(url))
-            throw new SoundcloudExplodeException("Invalid playlist url");
+            throw new SoundcloudExplodeException("Invalid track url");
 
-        var resolvedJson = await _client.ResolveSoundcloudUrlAsync
-            (url, cancellationToken);
+        var resolvedJson = await _client.ResolveSoundcloudUrlAsync(url, cancellationToken);
 
         return JsonConvert.DeserializeObject<TrackInformation>(resolvedJson)!;
     }
@@ -80,10 +75,7 @@ public class TrackClient
             return null;
 
         var track = JsonConvert.DeserializeObject<TrackInformation>(trackInfoJson);
-        if (track is null || track.PermalinkUrl is null)
-            return null;
-
-        return track.PermalinkUrl?.ToString();
+        return track is null || track.PermalinkUrl is null ? null : (track.PermalinkUrl?.ToString());
     }
 
     /// <summary>
@@ -94,12 +86,7 @@ public class TrackClient
         CancellationToken cancellationToken = default)
     {
         var trackUrl = await GetUrlByIdAsync(trackId, cancellationToken);
-        if (trackUrl is null)
-        {
-            return null;
-        }
-
-        return await GetAsync(trackUrl, cancellationToken);
+        return trackUrl is null ? null : await GetAsync(trackUrl, cancellationToken);
     }
 
     /// <summary>
@@ -112,8 +99,7 @@ public class TrackClient
         if (!IsUrlValid(url))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
-        var resolvedJson = await _client.ResolveSoundcloudUrlAsync
-            (url, cancellationToken);
+        var resolvedJson = await _client.ResolveSoundcloudUrlAsync(url, cancellationToken);
 
         if (!TracksRegex.IsMatch(url))
         {
@@ -130,7 +116,7 @@ public class TrackClient
 
         var next_href = default(string?);
 
-        do
+        while (true)
         {
             var tracks = new List<TrackInformation>();
 
@@ -145,7 +131,7 @@ public class TrackClient
             var tracksJson = await _http.GetAsync(url, cancellationToken);
             var tracksJObj = JObject.Parse(tracksJson);
             var collToken = tracksJObj?["collection"]?.ToString();
-            
+
             if (collToken is not null && JsonConvert.DeserializeObject
                 <List<TrackInformation>>(collToken) is List<TrackInformation> list)
             {
@@ -157,12 +143,12 @@ public class TrackClient
                 break;
 
             next_href = tracksJObj?["next_href"]?.ToString();
-            
+
             if (string.IsNullOrEmpty(next_href))
                 break;
 
             next_href += $"&client_id={_client.ClientId}";
-        } while (true);
+        }
     }
 
     /// <summary>
@@ -180,7 +166,7 @@ public class TrackClient
         var html = await _http.GetAsync(trackM3u8, cancellationToken);
         var m3u8 = html.Split(',');
 
-        if (m3u8.Length <= 0)
+        if (m3u8.Length == 0)
             return null;
 
         var link = "";
@@ -212,7 +198,7 @@ public class TrackClient
 
         if (track.Media is null
             || track.Media.Transcodings is null
-            || track.Media.Transcodings.Length <= 0)
+            || track.Media.Transcodings.Length == 0)
         {
             throw new TrackUnavailableException("No transcodings found");
         }
@@ -220,18 +206,12 @@ public class TrackClient
         var trackUrl = "";
 
         //progrssive/stream
-        var transcoding = track.Media.Transcodings
-            .Where(x => x.Quality == "sq"
-                && x.Format is not null && x.Format.MimeType is not null
-                && x.Format.MimeType.Contains("audio/mpeg") && x.Format.Protocol == "progressive")
-            .FirstOrDefault();
+        var transcoding = track.Media.Transcodings.FirstOrDefault(x => x.Quality == "sq"
+            && x.Format?.MimeType?.Contains("audio/mpeg") == true && x.Format.Protocol == "progressive");
 
         //hls
-        transcoding ??= track.Media.Transcodings
-            .Where(x => x.Quality == "sq"
-                && x.Format is not null && x.Format.MimeType is not null
-                && x.Format.MimeType.Contains("ogg") && x.Format.Protocol == "hls")
-            .FirstOrDefault();
+        transcoding ??= track.Media.Transcodings.FirstOrDefault(x => x.Quality == "sq"
+            && x.Format?.MimeType?.Contains("ogg") == true && x.Format.Protocol == "hls");
 
         if (transcoding is null || transcoding.Url is null)
             return null;
@@ -239,17 +219,12 @@ public class TrackClient
         trackUrl += transcoding.Url.ToString() + $"?client_id={_client.ClientId}";
 
         var trackMedia = await _http.GetAsync(trackUrl, cancellationToken);
-        var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
 
+        var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
         if (track2 is null)
             return null;
 
         var trackMediaUrl = track2.Url ?? "";
-        if (trackMediaUrl.Contains(".m3u8"))
-        {
-            return await QueryTrackMp3Async(trackMediaUrl, cancellationToken);
-        }
-
-        return trackMediaUrl;
+        return trackMediaUrl.Contains(".m3u8") ? await QueryTrackMp3Async(trackMediaUrl, cancellationToken) : trackMediaUrl;
     }
 }

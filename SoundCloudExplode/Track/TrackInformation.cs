@@ -134,7 +134,7 @@ public partial class TrackInformation : IBatchItem
 
     [JsonProperty("policy")]
     public string? Policy { get; set; }
-   
+
     [JsonProperty("user")]
     public User? User { get; set; }
 }
