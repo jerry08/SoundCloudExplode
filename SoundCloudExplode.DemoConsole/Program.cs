@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using SoundCloudExplode.Common;
 using SoundCloudExplode.DemoConsole.Utils;
 
 namespace SoundCloudExplode.DemoConsole;
@@ -11,7 +12,15 @@ internal static class Program
     {
         Console.Title = "SoundCloudExplode Demo";
 
+        System.Net.ServicePointManager.DefaultConnectionLimit = 200;
+
         var soundcloud = new SoundCloudClient();
+
+        var tracks1 = await soundcloud.Playlists.GetTracksAsync(
+            "https://soundcloud.com/user-83068509/sets/anime",
+            50,
+            200
+        ).CollectAsync(50);
 
         // Get the track URL
         Console.Write("Enter Soundcloud track URL: ");

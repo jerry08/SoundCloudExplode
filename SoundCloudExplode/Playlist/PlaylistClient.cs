@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using SoundCloudExplode.Http;
 using SoundCloudExplode.Track;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Exceptions;
+using SoundCloudExplode.Utils;
+using SoundCloudExplode.Utils.Extensions;
 
 namespace SoundCloudExplode.Tracks;
 
@@ -67,6 +66,9 @@ public class PlaylistClient
     /// </summary>
     public async IAsyncEnumerable<Batch<TrackInformation>> GetTrackBatchesAsync(
         string url,
+        int maxConcurrent = 1,
+        int maxChunks = 1,
+        int offset = 0,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (!IsUrlValid(url))
@@ -76,19 +78,44 @@ public class PlaylistClient
         if (playlist is null || playlist.Tracks is null)
             yield break;
 
-        var encounteredIds = new HashSet<long>();
+        if (maxChunks < maxConcurrent)
+            maxChunks = maxConcurrent;
 
-        foreach (var track in playlist.Tracks)
+        var encounteredIds = new List<long>();
+
+        var list = playlist.Tracks.Skip(offset).ToList();
+        var chunks = list.ChunkBy(maxChunks);
+
+        var semaphore = new ResizableSemaphore();
+        semaphore.MaxCount = maxConcurrent;
+
+        foreach (var chunk in chunks)
         {
-            // Don't yield the same track twice
-            if (!encounteredIds.Add(track.Id))
-                continue;
+            var tasks = chunk.Select(track => Task.Run(async () =>
+            {
+                using var access = await semaphore.AcquireAsync();
 
-            var trackInfo = await _client.Tracks.GetByIdAsync(track.Id, cancellationToken);
-            if (trackInfo is null)
-                continue;
+                // Don't yield the same track twice
+                if (!encounteredIds.Contains(track.Id))
+                    encounteredIds.Add(track.Id);
+                else
+                    return null;
 
-            yield return Batch.Create(new[] { trackInfo });
+                var trackInfo = await _client.Tracks.GetByIdAsync(track.Id, cancellationToken);
+                if (trackInfo is null)
+                    return null;
+
+                return trackInfo;
+            }));
+
+            var tracks = await Task.WhenAll(tasks);
+            foreach (var trackInfo in tracks)
+            {
+                if (trackInfo is null)
+                    continue;
+
+                yield return Batch.Create(new[] { trackInfo });
+            }
         }
     }
 
@@ -97,6 +124,9 @@ public class PlaylistClient
     /// </summary>
     public IAsyncEnumerable<TrackInformation> GetTracksAsync(
         string url,
+        int maxConcurrent = 1,
+        int maxChunks = 1,
+        int offset = 0,
         CancellationToken cancellationToken = default) =>
-        GetTrackBatchesAsync(url, cancellationToken).FlattenAsync();
+        GetTrackBatchesAsync(url, maxConcurrent, maxChunks, offset, cancellationToken).FlattenAsync();
 }

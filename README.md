@@ -72,6 +72,23 @@ var tracks = await soundcloud.Playlists.GetTracksAsync(
 var tracksSubset = await soundcloud.Playlists
     .GetTracksAsync("https://soundcloud.com/tommy-enjoy/sets/aimer")
     .CollectAsync(20);
+
+// Speed up process by increasing 'maxConcurrent' (default is 1)
+var tracksSubset = await soundcloud.Playlists
+    .GetTracksAsync(
+        "https://soundcloud.com/tommy-enjoy/sets/aimer",
+        maxConcurrent: 10
+    )
+    .CollectAsync(20);
+
+// Loop through large playlist faster by setting 'maxChunks' (default is 1)
+var tracksSubset = await soundcloud.Playlists
+    .GetTracksAsync(
+        "https://soundcloud.com/tommy-enjoy/sets/aimer",
+        maxConcurrent: 20,
+        maxChunks: 250
+    )
+    .CollectAsync(100);
 ```
 
 You can also enumerate the tracks iteratively without waiting for the whole list to load:

@@ -5,15 +5,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using HtmlAgilityPack;
 using SoundCloudExplode.Http;
 using SoundCloudExplode.Track;
-using SoundCloudExplode.Utils;
-using SoundCloudExplode.Playlist;
-using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Tracks;
 
 namespace SoundCloudExplode;
