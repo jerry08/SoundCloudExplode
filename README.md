@@ -44,12 +44,20 @@ using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
 
+//Get playlist info with all tracks
 var playlist = await soundcloud.Playlists.GetAsync(
     "https://soundcloud.com/tommy-enjoy/sets/aimer"
 );
 
+//Or Get only the playlist basic info without loading all tracks info
+var playlist = await soundcloud.Playlists.GetAsync(
+    "https://soundcloud.com/tommy-enjoy/sets/aimer",
+    false
+);
+
 var title = playlist.Title;
 var artworkUrl = playlist.ArtworkUrl;
+var tracks = playlist.Tracks;
 ...
 ```
 
@@ -63,7 +71,7 @@ using SoundCloudExplode.Common;
 
 var soundcloud = new SoundCloudClient();
 
-// Get all playlist tracks
+// Get all tracks in a playlist
 var tracks = await soundcloud.Playlists.GetTracksAsync(
     "https://soundcloud.com/tommy-enjoy/sets/aimer"
 );
@@ -72,23 +80,20 @@ var tracks = await soundcloud.Playlists.GetTracksAsync(
 var tracksSubset = await soundcloud.Playlists
     .GetTracksAsync("https://soundcloud.com/tommy-enjoy/sets/aimer")
     .CollectAsync(20);
-
-// Speed up process by increasing 'maxConcurrent' (default is 1)
+// OR
 var tracksSubset = await soundcloud.Playlists
     .GetTracksAsync(
         "https://soundcloud.com/tommy-enjoy/sets/aimer",
-        maxConcurrent: 10
-    )
-    .CollectAsync(20);
+        limit: 20
+    );
 
-// Loop through large playlist faster by setting 'maxChunks' (default is 1)
+//Setting offset
 var tracksSubset = await soundcloud.Playlists
     .GetTracksAsync(
         "https://soundcloud.com/tommy-enjoy/sets/aimer",
-        maxConcurrent: 20,
-        maxChunks: 250
-    )
-    .CollectAsync(100);
+        offset: 10,
+        limit: 5
+    );
 ```
 
 You can also enumerate the tracks iteratively without waiting for the whole list to load:

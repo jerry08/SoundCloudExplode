@@ -6,30 +6,37 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
-using SoundCloudExplode.Track;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Exceptions;
-using SoundCloudExplode.Utils;
 using SoundCloudExplode.Utils.Extensions;
+using System.Net.Http;
+using SoundCloudExplode.Bridge;
 
-namespace SoundCloudExplode.Tracks;
+namespace SoundCloudExplode.Track;
 
 /// <summary>
 /// Operations related to Soundcloud playlist.
 /// </summary>
 public class PlaylistClient
 {
-    private readonly SoundCloudClient _client;
+    private readonly HttpClient _http;
+    private readonly SoundcloudEndpoint _endpoint;
+    private readonly TrackClient _tracks;
 
     private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/[a-zA-Z]+");
 
     /// <summary>
     /// Initializes an instance of <see cref="PlaylistClient"/>.
     /// </summary>
-    public PlaylistClient(SoundCloudClient client)
+    public PlaylistClient(
+        HttpClient http,
+        SoundcloudEndpoint endpoint,
+        TrackClient tracks)
     {
-        _client = client;
+        _http = http;
+        _endpoint = endpoint;
+        _tracks = tracks;
     }
 
     /// <summary>
@@ -48,17 +55,30 @@ public class PlaylistClient
     /// <summary>
     /// Gets the metadata associated with the specified playlist.
     /// </summary>
-    public async ValueTask<PlaylistInformation?> GetAsync(
+    /// <param name="url"></param>
+    /// <param name="autoPopulateAllTracks">Set to true if you want to get all tracks
+    /// information at the same time. If false, only the tracks id and playlist info will return.
+    /// </param>
+    /// <param name="cancellationToken"></param>
+    /// <exception cref="SoundcloudExplodeException"></exception>
+    public async ValueTask<PlaylistInformation> GetAsync(
         string url,
+        bool autoPopulateAllTracks = true,
         CancellationToken cancellationToken = default)
     {
         if (!IsUrlValid(url))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
-        var resolvedJson = await _client.ResolveSoundcloudUrlAsync
-            (url, cancellationToken);
+        var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
+        var playlist = JsonConvert.DeserializeObject<PlaylistInformation>(resolvedJson)!;
 
-        return JsonConvert.DeserializeObject<PlaylistInformation>(resolvedJson);
+        if (autoPopulateAllTracks)
+        {
+            var tracks = await GetTracksAsync(url);
+            playlist.Tracks = tracks.ToArray();
+        }
+
+        return playlist;
     }
 
     /// <summary>
@@ -66,56 +86,29 @@ public class PlaylistClient
     /// </summary>
     public async IAsyncEnumerable<Batch<TrackInformation>> GetTrackBatchesAsync(
         string url,
-        int maxConcurrent = 1,
-        int maxChunks = 1,
         int offset = 0,
+        int limit = -1,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (!IsUrlValid(url))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
-        var playlist = await GetAsync(url, cancellationToken);
+        var playlist = await GetAsync(url, false, cancellationToken);
         if (playlist is null || playlist.Tracks is null)
             yield break;
 
-        if (maxChunks < maxConcurrent)
-            maxChunks = maxConcurrent;
+        if (limit > 0)
+            playlist.Tracks = playlist.Tracks.Skip(offset).Take(limit).ToArray();
+        else if (offset > 0)
+            playlist.Tracks = playlist.Tracks.Skip(offset).ToArray();
 
-        var encounteredIds = new List<long>();
-
-        var list = playlist.Tracks.Skip(offset).ToList();
-        var chunks = list.ChunkBy(maxChunks);
-
-        var semaphore = new ResizableSemaphore();
-        semaphore.MaxCount = maxConcurrent;
-
-        foreach (var chunk in chunks)
+        //Soundcloud single request limit is 50
+        foreach (var chunk in playlist.Tracks.ChunkBy(50))
         {
-            var tasks = chunk.Select(track => Task.Run(async () =>
-            {
-                using var access = await semaphore.AcquireAsync();
+            var ids = string.Join(",", chunk.Select(x => x.Id));
 
-                // Don't yield the same track twice
-                if (!encounteredIds.Contains(track.Id))
-                    encounteredIds.Add(track.Id);
-                else
-                    return null;
-
-                var trackInfo = await _client.Tracks.GetByIdAsync(track.Id, cancellationToken);
-                if (trackInfo is null)
-                    return null;
-
-                return trackInfo;
-            }));
-
-            var tracks = await Task.WhenAll(tasks);
-            foreach (var trackInfo in tracks)
-            {
-                if (trackInfo is null)
-                    continue;
-
-                yield return Batch.Create(new[] { trackInfo });
-            }
+            var response = await _http.ExecuteGetAsync($"https://api-v2.soundcloud.com/tracks?ids={ids}&limit={limit}&offset={offset}&client_id={Constants.ClientId}");
+            yield return Batch.Create(JsonConvert.DeserializeObject<List<TrackInformation>>(response)!);
         }
     }
 
@@ -124,9 +117,8 @@ public class PlaylistClient
     /// </summary>
     public IAsyncEnumerable<TrackInformation> GetTracksAsync(
         string url,
-        int maxConcurrent = 1,
-        int maxChunks = 1,
         int offset = 0,
+        int limit = -1,
         CancellationToken cancellationToken = default) =>
-        GetTrackBatchesAsync(url, maxConcurrent, maxChunks, offset, cancellationToken).FlattenAsync();
+        GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
 }

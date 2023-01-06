@@ -7,9 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using SoundCloudExplode.Http;
 using SoundCloudExplode.Track;
-using SoundCloudExplode.Tracks;
+using SoundCloudExplode.Utils.Extensions;
+using SoundCloudExplode.Bridge;
+using SoundCloudExplode.Utils;
 
 namespace SoundCloudExplode;
 
@@ -25,7 +26,8 @@ public class SoundCloudClient
     private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/[a-zA-Z]+");
     private readonly Regex TrackRegex = new(@"soundcloud\..+?\/(.*?)\/[a-zA-Z0-9~@#$^*()_+=[\]{}|\\,.?: -]+");
 
-    private readonly NetHttpClient _http;
+    private readonly HttpClient _http;
+    private readonly SoundcloudEndpoint _endpoint;
 
     private readonly string BaseUrl = "https://soundcloud.com";
 
@@ -45,31 +47,32 @@ public class SoundCloudClient
     public SoundCloudClient(string clientId, HttpClient http)
     {
         ClientId = clientId;
-        _http = new NetHttpClient(http);
-        Tracks = new TrackClient(this, http);
-        Playlists = new PlaylistClient(this);
+        _http = http;
+        _endpoint = new(http);
+        _endpoint.ClientId = clientId;
+
+        Tracks = new TrackClient(http, _endpoint);
+        Playlists = new PlaylistClient(http, _endpoint, Tracks);
     }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
-    public SoundCloudClient() : this(Constants.ClientId, Utils.Http.Client)
+    public SoundCloudClient() : this(Constants.ClientId, Http.Client)
     {
     }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
-    public SoundCloudClient(HttpClient http)
-        : this(Constants.ClientId, http)
+    public SoundCloudClient(HttpClient http) : this(Constants.ClientId, http)
     {
     }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
-    public SoundCloudClient(string clientId)
-        : this(Utils.Http.Client)
+    public SoundCloudClient(string clientId) : this(Http.Client)
     {
         ClientId = clientId;
     }
@@ -77,9 +80,18 @@ public class SoundCloudClient
     /// <summary>
     /// Sets Default ClientId
     /// </summary>
-    public async void SetClientId(CancellationToken cancellationToken = default)
+    public async Task SetClientIdAsync(CancellationToken cancellationToken = default)
     {
-        var html = await _http.GetAsync(BaseUrl, cancellationToken);
+        ClientId = await GetClientIdAsync(cancellationToken);
+        _endpoint.ClientId = ClientId;
+    }
+
+    /// <summary>
+    /// Gets ClientId
+    /// </summary>
+    public async Task<string> GetClientIdAsync(CancellationToken cancellationToken = default)
+    {
+        var html = await _http.ExecuteGetAsync(BaseUrl, cancellationToken);
         var document = new HtmlDocument();
         document.LoadHtml(html);
 
@@ -88,41 +100,9 @@ public class SoundCloudClient
 
         var script_url = script.Last().Attributes["src"].Value;
 
-        html = await _http.GetAsync(script_url, cancellationToken);
+        html = await _http.ExecuteGetAsync(script_url, cancellationToken);
 
-        ClientId = html.Split(new string[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
-    }
-
-    internal async ValueTask<string> ResolveSoundcloudUrlAsync(
-        string soundcloudUrl,
-        CancellationToken cancellationToken = default)
-    {
-        var host = new Uri(soundcloudUrl).Host;
-        if (host.StartsWith("m."))
-        {
-            var builder = new UriBuilder(soundcloudUrl);
-            builder.Host = host.Substring(2);
-
-            soundcloudUrl = builder.Uri.ToString();
-        }
-
-        return await _http.GetAsync($"{Constants.ResolveEndpoint}?url={soundcloudUrl}&client_id={ClientId}", cancellationToken);
-    }
-
-    /// <summary>
-    /// Downloads a track
-    /// </summary>
-    public async ValueTask DownloadAsync(
-        Playlist.Track track,
-        string filePath,
-        IProgress<double>? progress = null,
-        CancellationToken cancellationToken = default)
-    {
-        var trackInfo = await Tracks.GetByIdAsync(track.Id, cancellationToken);
-        if (trackInfo is null)
-            return;
-
-        await DownloadAsync(trackInfo, filePath, progress, cancellationToken);
+        return html.Split(new string[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
     }
 
     /// <summary>

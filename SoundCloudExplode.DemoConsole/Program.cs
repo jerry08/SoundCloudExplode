@@ -13,34 +13,66 @@ internal static class Program
         Console.Title = "SoundCloudExplode Demo";
 
         System.Net.ServicePointManager.DefaultConnectionLimit = 200;
+        //System.Net.ServicePointManager.MaxServicePoints = 500;
 
         var soundcloud = new SoundCloudClient();
 
-        var tracks1 = await soundcloud.Playlists.GetTracksAsync(
-            "https://soundcloud.com/user-83068509/sets/anime",
-            50,
-            200
-        ).CollectAsync(50);
-
-        // Get the track URL
-        Console.Write("Enter Soundcloud track URL: ");
-        var url = Console.ReadLine() ?? "";
-
-        var track = await soundcloud.Tracks.GetAsync(url);
-        if (track is null)
+        while (true)
         {
-            Console.Error.WriteLine("The track is not found.");
-            return;
+            Console.WriteLine("Press Ctrl+C To Exit");
+            Console.WriteLine();
+
+            // Get the track URL
+            Console.Write("Enter Soundcloud track URL: ");
+            var url = Console.ReadLine() ?? "";
+
+            if (soundcloud.Playlists.IsUrlValid(url))
+            {
+                var tracks = await soundcloud.Playlists.GetTracksAsync(url);
+
+                foreach (var track in tracks)
+                {
+                    // Download the stream
+                    var trackName = string.Join("_", track.Title!.Split(Path.GetInvalidFileNameChars()));
+                    var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
+
+                    using (var progress = new ConsoleProgress())
+                    {
+                        Console.WriteLine($"Downloading {trackName}");
+                        await soundcloud.DownloadAsync(track, trackPath, progress);
+                    }
+
+                    Console.WriteLine("Done");
+                    Console.WriteLine($"Track saved to '{trackPath}'");
+                }
+            }
+            else if (soundcloud.Tracks.IsUrlValid(url))
+            {
+                var track = await soundcloud.Tracks.GetAsync(url);
+                if (track is null)
+                {
+                    Console.Error.WriteLine("The track is not found.");
+                    return;
+                }
+
+                // Download the stream
+                var trackName = string.Join("_", track.Title!.Split(Path.GetInvalidFileNameChars()));
+                var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
+
+                using (var progress = new ConsoleProgress())
+                {
+                    Console.WriteLine($"Downloading {trackName}");
+                    await soundcloud.DownloadAsync(track, trackPath, progress);
+                }
+
+                Console.WriteLine("Done");
+                Console.WriteLine($"Track saved to '{trackPath}'");
+            }
+            else
+            {
+                Console.WriteLine("Bad Url");
+            }
         }
-
-        // Download the stream
-        var fileName = $@"{Environment.CurrentDirectory}\Download\{ReplaceInvalidChars(track.Title!)}.mp3";
-
-        using (var progress = new ConsoleProgress())
-            await soundcloud.DownloadAsync(track, fileName, progress);
-
-        Console.WriteLine("Done");
-        Console.WriteLine($"Track saved to '{fileName}'");
     }
 
     public static string ReplaceInvalidChars(string fileName)

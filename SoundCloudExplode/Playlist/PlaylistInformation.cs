@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SoundCloudExplode.Common;
+using SoundCloudExplode.Track;
+using System;
 
 namespace SoundCloudExplode.Playlist;
 
@@ -35,56 +37,9 @@ public partial class PlaylistInformation
     public object? PublishedAt { get; set; }
     public DateTimeOffset DisplayDate { get; set; }
     public PlaylistInformationUser? User { get; set; }
-    public Track[]? Tracks { get; set; }
+    //public Track[]? Tracks { get; set; }
+    public TrackInformation[]? Tracks { get; set; }
     public long? TrackCount { get; set; }
-}
-
-public partial class Track
-{
-    public Uri? ArtworkUrl { get; set; }
-    public object? Caption { get; set; }
-    public bool? Commentable { get; set; }
-    public long? CommentCount { get; set; }
-    public DateTimeOffset? CreatedAt { get; set; }
-    public string? Description { get; set; }
-    public bool? Downloadable { get; set; }
-    public long? DownloadCount { get; set; }
-    public long? Duration { get; set; }
-    public long? FullDuration { get; set; }
-    public string? EmbeddableBy { get; set; }
-    public string? Genre { get; set; }
-    public bool? HasDownloadsLeft { get; set; }
-    public long Id { get; set; }
-    public Kind? Kind { get; set; }
-    public object? LabelName { get; set; }
-    public DateTimeOffset? LastModified { get; set; }
-    public string? License { get; set; }
-    public long? LikesCount { get; set; }
-    public string? Permalink { get; set; }
-    public Uri? PermalinkUrl { get; set; }
-    public long? PlaybackCount { get; set; }
-    public bool? Public { get; set; }
-    public object? PublisherMetadata { get; set; }
-    public object? PurchaseTitle { get; set; }
-    public object? PurchaseUrl { get; set; }
-    public object? ReleaseDate { get; set; }
-    public long? RepostsCount { get; set; }
-    public object? SecretToken { get; set; }
-    public string? Sharing { get; set; }
-    public string? State { get; set; }
-    public bool? Streamable { get; set; }
-    public string? TagList { get; set; }
-    public string? Title { get; set; }
-    public Uri? Uri { get; set; }
-    public string? Urn { get; set; }
-    public long? UserId { get; set; }
-    public object? Visuals { get; set; }
-    public Uri? WaveformUrl { get; set; }
-    public DateTimeOffset? DisplayDate { get; set; }
-    public Media? Media { get; set; }
-    public MonetizationModel MonetizationModel { get; set; }
-    public string? Policy { get; set; }
-    public TrackUser? User { get; set; }
 }
 
 public partial class Media

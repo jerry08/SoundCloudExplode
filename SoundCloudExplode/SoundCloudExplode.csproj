@@ -22,6 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Http\**" />
+    <EmbeddedResource Remove="Http\**" />
+    <None Remove="Http\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="favicon.ico" />
   </ItemGroup>
 

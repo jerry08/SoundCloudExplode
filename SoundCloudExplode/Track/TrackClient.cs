@@ -8,20 +8,20 @@ using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SoundCloudExplode.Http;
-using SoundCloudExplode.Track;
+using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
+using SoundCloudExplode.Utils.Extensions;
 
-namespace SoundCloudExplode.Tracks;
+namespace SoundCloudExplode.Track;
 
 /// <summary>
 /// Operations related to Soundcloud tracks.
 /// </summary>
 public class TrackClient
 {
-    private readonly NetHttpClient _http;
-    private readonly SoundCloudClient _client;
+    private readonly HttpClient _http;
+    private readonly SoundcloudEndpoint _endpoint;
 
     private readonly Regex SingleTrackRegex = new(@"soundcloud\..+?\/(.*?)\/[a-zA-Z0-9~@#$^*()_+=[\]{}|\\,.?: -]+");
     private readonly Regex TracksRegex = new(@"soundcloud\..+?\/(.*?)\/track");
@@ -29,10 +29,10 @@ public class TrackClient
     /// <summary>
     /// Initializes an instance of <see cref="TrackClient"/>.
     /// </summary>
-    public TrackClient(SoundCloudClient client, HttpClient http)
+    public TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
     {
-        _http = new NetHttpClient(http);
-        _client = client;
+        _http = http;
+        _endpoint = endpoint;
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ public class TrackClient
         if (!IsUrlValid(url))
             throw new SoundcloudExplodeException("Invalid track url");
 
-        var resolvedJson = await _client.ResolveSoundcloudUrlAsync(url, cancellationToken);
+        var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
 
         return JsonConvert.DeserializeObject<TrackInformation>(resolvedJson)!;
     }
@@ -70,7 +70,7 @@ public class TrackClient
         long trackId,
         CancellationToken cancellationToken = default)
     {
-        var trackInfoJson = await _http.GetAsync($"{Constants.TrackEndpoint}/{trackId}?client_id={_client.ClientId}", cancellationToken);
+        var trackInfoJson = await _http.ExecuteGetAsync($"{Constants.TrackEndpoint}/{trackId}?client_id={_endpoint.ClientId}", cancellationToken);
         if (trackInfoJson is null)
             return null;
 
@@ -99,7 +99,7 @@ public class TrackClient
         if (!IsUrlValid(url))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
-        var resolvedJson = await _client.ResolveSoundcloudUrlAsync(url, cancellationToken);
+        var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
 
         if (!TracksRegex.IsMatch(url))
         {
@@ -126,9 +126,9 @@ public class TrackClient
             }
 
             //url = $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?offset=2014-08-15T00&limit=20&representation=&client_id=eLWKwhCY4BrKxcpiyhjyr6SeHiszzUq6&app_locale=en";
-            url = next_href ?? $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?limit=200&client_id={_client.ClientId}";
+            url = next_href ?? $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?limit=200&client_id={_endpoint.ClientId}";
 
-            var tracksJson = await _http.GetAsync(url, cancellationToken);
+            var tracksJson = await _http.ExecuteGetAsync(url, cancellationToken);
             var tracksJObj = JObject.Parse(tracksJson);
             var collToken = tracksJObj?["collection"]?.ToString();
 
@@ -147,7 +147,7 @@ public class TrackClient
             if (string.IsNullOrEmpty(next_href))
                 break;
 
-            next_href += $"&client_id={_client.ClientId}";
+            next_href += $"&client_id={_endpoint.ClientId}";
         }
     }
 
@@ -163,7 +163,7 @@ public class TrackClient
         string trackM3u8,
         CancellationToken cancellationToken = default)
     {
-        var html = await _http.GetAsync(trackM3u8, cancellationToken);
+        var html = await _http.ExecuteGetAsync(trackM3u8, cancellationToken);
         var m3u8 = html.Split(',');
 
         if (m3u8.Length == 0)
@@ -182,6 +182,20 @@ public class TrackClient
         }
 
         return link;
+    }
+
+    /// <summary>
+    /// Gets the download url from a track
+    /// </summary>
+    public async ValueTask<string?> GetDownloadUrlAsync(
+        string url,
+        CancellationToken cancellationToken = default)
+    {
+        var track = await GetAsync(url, cancellationToken);
+        if (track is null)
+            return null;
+
+        return await GetDownloadUrlAsync(track);
     }
 
     /// <summary>
@@ -216,9 +230,9 @@ public class TrackClient
         if (transcoding is null || transcoding.Url is null)
             return null;
 
-        trackUrl += transcoding.Url.ToString() + $"?client_id={_client.ClientId}";
+        trackUrl += transcoding.Url.ToString() + $"?client_id={_endpoint.ClientId}";
 
-        var trackMedia = await _http.GetAsync(trackUrl, cancellationToken);
+        var trackMedia = await _http.ExecuteGetAsync(trackUrl, cancellationToken);
 
         var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
         if (track2 is null)

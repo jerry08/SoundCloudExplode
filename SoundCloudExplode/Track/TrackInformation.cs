@@ -46,7 +46,7 @@ public partial class TrackInformation : IBatchItem
     public bool HasDownloadsLeft { get; set; }
 
     [JsonProperty("id")]
-    public long? Id { get; set; }
+    public long Id { get; set; } = default!;
 
     [JsonProperty("kind")]
     public string? Kind { get; set; }
