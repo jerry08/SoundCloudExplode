@@ -97,7 +97,7 @@ public class TrackClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (!IsUrlValid(url))
-            throw new SoundcloudExplodeException("Invalid playlist url");
+            throw new SoundcloudExplodeException("Invalid track url");
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
 
@@ -112,7 +112,7 @@ public class TrackClient
             yield break;
         }
 
-        var user = JsonConvert.DeserializeObject<User>(resolvedJson);
+        var user = JsonConvert.DeserializeObject<User.User>(resolvedJson);
 
         var next_href = default(string?);
 
