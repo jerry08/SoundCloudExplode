@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using SoundCloudExplode.Track;
-using SoundCloudExplode.Utils.Extensions;
+using SoundCloudExplode.Search;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Utils;
+using SoundCloudExplode.Utils.Extensions;
+using SoundCloudExplode.User;
 
 namespace SoundCloudExplode;
 
@@ -32,14 +34,24 @@ public class SoundCloudClient
     private readonly string BaseUrl = "https://soundcloud.com";
 
     /// <summary>
+    /// Operations related to Soundcloud search.
+    /// </summary>
+    public SearchClient Search { get; }
+
+    /// <summary>
     /// Operations related to Soundcloud tracks.
     /// </summary>
     public TrackClient Tracks { get; }
 
     /// <summary>
-    /// Operations related to Soundcloud playlists.
+    /// Operations related to Soundcloud playlists/albums.
     /// </summary>
     public PlaylistClient Playlists { get; }
+
+    /// <summary>
+    /// Operations related to Soundcloud users.
+    /// </summary>
+    public UserClient Users { get; }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
@@ -48,11 +60,14 @@ public class SoundCloudClient
     {
         ClientId = clientId;
         _http = http;
+
         _endpoint = new(http);
         _endpoint.ClientId = clientId;
 
-        Tracks = new TrackClient(http, _endpoint);
-        Playlists = new PlaylistClient(http, _endpoint, Tracks);
+        Search = new(http, _endpoint);
+        Tracks = new(http, _endpoint);
+        Playlists = new(http, _endpoint);
+        Users = new(http, _endpoint);
     }
 
     /// <summary>
