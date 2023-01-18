@@ -4,7 +4,7 @@ using SoundCloudExplode.Common;
 
 namespace SoundCloudExplode.Track;
 
-public partial class TrackInformation : IBatchItem
+public class TrackInformation : IBatchItem
 {
     [JsonProperty("artwork_url")]
     public Uri? ArtworkUrl { get; set; }
@@ -136,16 +136,16 @@ public partial class TrackInformation : IBatchItem
     public string? Policy { get; set; }
 
     [JsonProperty("user")]
-    public User? User { get; set; }
+    public User.User? User { get; set; }
 }
 
-public partial class Media
+public class Media
 {
     [JsonProperty("transcodings")]
     public Transcoding[]? Transcodings { get; set; }
 }
 
-public partial class Transcoding
+public class Transcoding
 {
     [JsonProperty("url")]
     public Uri? Url { get; set; }
@@ -166,7 +166,7 @@ public partial class Transcoding
     public string? Quality { get; set; }
 }
 
-public partial class Format
+public class Format
 {
     [JsonProperty("protocol")]
     public string? Protocol { get; set; }
@@ -175,7 +175,7 @@ public partial class Format
     public string? MimeType { get; set; }
 }
 
-public partial class PublisherMetadata
+public class PublisherMetadata
 {
     [JsonProperty("id")]
     public long? Id { get; set; }
@@ -188,64 +188,4 @@ public partial class PublisherMetadata
 
     [JsonProperty("contains_music")]
     public bool ContainsMusic { get; set; }
-}
-
-public partial class User
-{
-    [JsonProperty("avatar_url")]
-    public Uri? AvatarUrl { get; set; }
-
-    [JsonProperty("first_name")]
-    public string? FirstName { get; set; }
-
-    [JsonProperty("full_name")]
-    public string? FullName { get; set; }
-
-    [JsonProperty("id")]
-    public long? Id { get; set; }
-
-    [JsonProperty("kind")]
-    public string? Kind { get; set; }
-
-    [JsonProperty("last_modified")]
-    public DateTimeOffset? LastModified { get; set; }
-
-    [JsonProperty("last_name")]
-    public string? LastName { get; set; }
-
-    [JsonProperty("permalink")]
-    public string? Permalink { get; set; }
-
-    [JsonProperty("permalink_url")]
-    public Uri? PermalinkUrl { get; set; }
-
-    [JsonProperty("uri")]
-    public Uri? Uri { get; set; }
-
-    [JsonProperty("urn")]
-    public string? Urn { get; set; }
-
-    [JsonProperty("username")]
-    public string? Username { get; set; }
-
-    [JsonProperty("verified")]
-    public bool Verified { get; set; }
-
-    [JsonProperty("city")]
-    public string? City { get; set; }
-
-    [JsonProperty("country_code")]
-    public string? CountryCode { get; set; }
-
-    [JsonProperty("badges")]
-    public Badges? Badges { get; set; }
-}
-
-public partial class Badges
-{
-    [JsonProperty("pro_unlimited")]
-    public bool ProUnlimited { get; set; }
-
-    [JsonProperty("verified")]
-    public bool Verified { get; set; }
 }

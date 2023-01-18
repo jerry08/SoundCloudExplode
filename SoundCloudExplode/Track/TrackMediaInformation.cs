@@ -2,7 +2,7 @@
 
 namespace SoundCloudExplode.Track;
 
-public partial class TrackMediaInformation
+public class TrackMediaInformation
 {
     [JsonProperty("url")]
     public string? Url { get; set; }
