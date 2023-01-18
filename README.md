@@ -137,6 +137,48 @@ await foreach (var batch in soundcloud.Playlists.GetTrackBatchesAsync(
 }
 ```
 
+### Albums
+**Note:** Use the same method as retrieving playlists to get albums because they are the same. 
+
+### Searching
+You can execute a search query and get its results by calling Search.GetResultsAsync(...). Each result may represent either a track, a playlist, an album, or a user, so you need to apply pattern matching to handle the corresponding cases:
+
+```csharp
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+
+await foreach (var result in soundcloud.Search.GetResultsAsync("banda neira"))
+{
+    // Use pattern matching to handle different results (tracks, playlists, users)
+    switch (result)
+    {
+        case TrackSearchResult track:
+            {
+                var id = track.Id;
+                var title = track.Title;
+                var duration = track.Duration;
+                break;
+            }
+        //NOTE: Soundcloud handles playlist and albums the same way.
+        case PlaylistSearchResult playlist:
+            {
+                var id = playlist.Id;
+                var title = playlist.Title;
+                break;
+            }
+        case UserSearchResult user:
+            {
+                var id = user.Id;
+                var title = user.Title;
+                var userName = user.Username;
+                var fullName = user.FullName;
+                break;
+            }
+    }
+}
+```
+
 #### Downloading tracks
 
 ```csharp
