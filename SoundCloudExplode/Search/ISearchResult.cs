@@ -12,6 +12,7 @@ namespace SoundCloudExplode.Search;
 ///     <list type="bullet">
 ///         <item><see cref="TrackSearchResult" /></item>
 ///         <item><see cref="PlaylistSearchResult" /></item>
+///         <item><see cref="UserSearchResult" /></item>
 ///     </list>
 /// </p>
 /// </summary>
