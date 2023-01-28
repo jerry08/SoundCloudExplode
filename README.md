@@ -209,3 +209,5 @@ var downloadUrl = await soundcloud.Tracks.GetDownloadUrlAsync(
     track
 );
 ```
+
+**This project was inspired by [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode).**
