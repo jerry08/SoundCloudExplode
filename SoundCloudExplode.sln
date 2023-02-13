@@ -7,14 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoundCloudExplode", "SoundC
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F5CE41D6-01C6-468E-898A-B377F6EEB443}"
 	ProjectSection(SolutionItems) = preProject
-		Changelog.md = Changelog.md
 		Directory.Build.props = Directory.Build.props
 		favicon.ico = favicon.ico
 		favicon.png = favicon.png
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundCloudExplode.DemoConsole", "SoundCloudExplode.DemoConsole\SoundCloudExplode.DemoConsole.csproj", "{203F9069-DADA-4B1E-86C6-0BFC6FF1190C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoundCloudExplode.DemoConsole", "SoundCloudExplode.DemoConsole\SoundCloudExplode.DemoConsole.csproj", "{203F9069-DADA-4B1E-86C6-0BFC6FF1190C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
