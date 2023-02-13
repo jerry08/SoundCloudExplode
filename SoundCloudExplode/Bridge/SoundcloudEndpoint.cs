@@ -22,16 +22,8 @@ public class SoundcloudEndpoint
         CancellationToken cancellationToken = default)
     {
         var host = new Uri(url).Host;
-        if (host.StartsWith("m."))
-        {
-            var builder = new UriBuilder(url)
-            {
-                Host = host.Substring(2)
-            };
 
-            url = builder.Uri.ToString();
-        }
-        else if (host.StartsWith("on."))
+        if (host.StartsWith("on."))
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             using var response = await _http.SendAsync(
@@ -46,6 +38,18 @@ public class SoundcloudEndpoint
             {
                 Query = "",
                 Fragment = ""
+            };
+
+            url = builder.Uri.ToString();
+
+            host = new Uri(url).Host;
+        }
+
+        if (host.StartsWith("m."))
+        {
+            var builder = new UriBuilder(url)
+            {
+                Host = host.Substring(2)
             };
 
             url = builder.Uri.ToString();
