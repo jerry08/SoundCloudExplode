@@ -24,6 +24,7 @@ public class PlaylistClient
     private readonly HttpClient _http;
     private readonly SoundcloudEndpoint _endpoint;
 
+    private readonly Regex ShortUrlRegex = new(@"on\.soundcloud\..+?\/.+?");
     private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/[a-zA-Z]+");
 
     /// <summary>
@@ -41,10 +42,15 @@ public class PlaylistClient
     /// Checks for valid playlist url
     /// </summary>
     /// <param name="url"></param>
-    /// <returns></returns>
     /// <exception cref="SoundcloudExplodeException"></exception>
-    public bool IsUrlValid(string url)
+    public async Task<bool> IsUrlValidAsync(string url)
     {
+        if (ShortUrlRegex.IsMatch(url))
+        {
+            var response = await _http.GetAsync(url);
+            url = response.RequestMessage.RequestUri.ToString();
+        }
+
         url = url.ToLower();
         var isUrl = Uri.IsWellFormedUriString(url, UriKind.Absolute);
         return isUrl && PlaylistRegex.IsMatch(url);
@@ -64,7 +70,7 @@ public class PlaylistClient
         bool autoPopulateAllTracks = true,
         CancellationToken cancellationToken = default)
     {
-        if (!IsUrlValid(url))
+        if (!await IsUrlValidAsync(url))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
@@ -84,11 +90,11 @@ public class PlaylistClient
     /// </summary>
     public async IAsyncEnumerable<Batch<TrackInformation>> GetTrackBatchesAsync(
         string url,
-        int offset = 0,
-        int limit = 0,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (!IsUrlValid(url))
+        if (!await IsUrlValidAsync(url))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
         var playlist = await GetAsync(url, false, cancellationToken);
@@ -115,8 +121,8 @@ public class PlaylistClient
     /// </summary>
     public IAsyncEnumerable<TrackInformation> GetTracksAsync(
         string url,
-        int offset = 0,
-        int limit = 0,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default) =>
         GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
 }

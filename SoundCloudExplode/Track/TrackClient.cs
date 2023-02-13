@@ -23,6 +23,7 @@ public class TrackClient
     private readonly HttpClient _http;
     private readonly SoundcloudEndpoint _endpoint;
 
+    private readonly Regex ShortUrlRegex = new(@"on\.soundcloud\..+?\/.+?");
     private readonly Regex SingleTrackRegex = new(@"soundcloud\..+?\/(.*?)\/[a-zA-Z0-9~@#$^*()_+=[\]{}|\\,.?: -]+");
     private readonly Regex TracksRegex = new(@"soundcloud\..+?\/(.*?)\/track");
 
@@ -39,10 +40,15 @@ public class TrackClient
     /// Checks for valid track(s) url
     /// </summary>
     /// <param name="url"></param>
-    /// <returns></returns>
     /// <exception cref="SoundcloudExplodeException"></exception>
-    public bool IsUrlValid(string url)
+    public async Task<bool> IsUrlValidAsync(string url)
     {
+        if (ShortUrlRegex.IsMatch(url))
+        {
+            var response = await _http.GetAsync(url);
+            url = response.RequestMessage.RequestUri.ToString();
+        }
+
         url = url.ToLower();
         var isUrl = Uri.IsWellFormedUriString(url, UriKind.Absolute);
         return isUrl && (TracksRegex.IsMatch(url) || SingleTrackRegex.IsMatch(url));
@@ -55,7 +61,7 @@ public class TrackClient
         string url,
         CancellationToken cancellationToken = default)
     {
-        if (!IsUrlValid(url))
+        if (!await IsUrlValidAsync(url))
             throw new SoundcloudExplodeException("Invalid track url");
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
@@ -96,7 +102,7 @@ public class TrackClient
         string url,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (!IsUrlValid(url))
+        if (!await IsUrlValidAsync(url))
             throw new SoundcloudExplodeException("Invalid track url");
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);

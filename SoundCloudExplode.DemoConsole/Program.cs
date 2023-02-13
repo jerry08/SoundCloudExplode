@@ -26,7 +26,7 @@ internal static class Program
             Console.Write("Enter Soundcloud track URL: ");
             var url = Console.ReadLine() ?? "";
 
-            if (soundcloud.Playlists.IsUrlValid(url))
+            if (await soundcloud.Playlists.IsUrlValidAsync(url))
             {
                 var tracks = await soundcloud.Playlists.GetTracksAsync(url);
 
@@ -46,7 +46,7 @@ internal static class Program
                     Console.WriteLine($"Track saved to '{trackPath}'");
                 }
             }
-            else if (soundcloud.Tracks.IsUrlValid(url))
+            else if (await soundcloud.Tracks.IsUrlValidAsync(url))
             {
                 var track = await soundcloud.Tracks.GetAsync(url);
                 if (track is null)
