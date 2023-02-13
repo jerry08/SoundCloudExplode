@@ -28,13 +28,13 @@ public class SoundcloudEndpoint
             {
                 Host = host.Substring(2)
             };
-            
+
             soundcloudUrl = builder.Uri.ToString();
         }
         else if (host.StartsWith("on."))
         {
             var response = await _http.GetAsync(soundcloudUrl);
-            soundcloudUrl = response.RequestMessage.RequestUri.ToString();
+            soundcloudUrl = response.RequestMessage!.RequestUri!.ToString();
 
             var builder = new UriBuilder(soundcloudUrl)
             {

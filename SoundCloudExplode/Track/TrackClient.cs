@@ -46,7 +46,7 @@ public class TrackClient
         if (ShortUrlRegex.IsMatch(url))
         {
             var response = await _http.GetAsync(url);
-            url = response.RequestMessage.RequestUri.ToString();
+            url = response.RequestMessage!.RequestUri!.ToString();
         }
 
         url = url.ToLower();
