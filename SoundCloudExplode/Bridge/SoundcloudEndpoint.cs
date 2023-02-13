@@ -18,33 +18,42 @@ public class SoundcloudEndpoint
     }
 
     public async ValueTask<string> ResolveUrlAsync(
-        string soundcloudUrl,
+        string url,
         CancellationToken cancellationToken = default)
     {
-        var host = new Uri(soundcloudUrl).Host;
+        var host = new Uri(url).Host;
         if (host.StartsWith("m."))
         {
-            var builder = new UriBuilder(soundcloudUrl)
+            var builder = new UriBuilder(url)
             {
                 Host = host.Substring(2)
             };
 
-            soundcloudUrl = builder.Uri.ToString();
+            url = builder.Uri.ToString();
         }
         else if (host.StartsWith("on."))
         {
-            var response = await _http.GetAsync(soundcloudUrl);
-            soundcloudUrl = response.RequestMessage!.RequestUri!.ToString();
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var response = await _http.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken
+            );
 
-            var builder = new UriBuilder(soundcloudUrl)
+            url = response.RequestMessage!.RequestUri!.ToString();
+
+            var builder = new UriBuilder(url)
             {
                 Query = "",
                 Fragment = ""
             };
 
-            soundcloudUrl = builder.Uri.ToString();
+            url = builder.Uri.ToString();
         }
 
-        return await _http.ExecuteGetAsync($"{Constants.ResolveEndpoint}?url={soundcloudUrl}&client_id={ClientId}", cancellationToken);
+        return await _http.ExecuteGetAsync(
+            $"{Constants.ResolveEndpoint}?url={url}&client_id={ClientId}",
+            cancellationToken
+        );
     }
 }

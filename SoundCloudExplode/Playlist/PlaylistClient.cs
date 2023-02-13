@@ -41,13 +41,20 @@ public class PlaylistClient
     /// <summary>
     /// Checks for valid playlist url
     /// </summary>
-    /// <param name="url"></param>
     /// <exception cref="SoundcloudExplodeException"></exception>
-    public async Task<bool> IsUrlValidAsync(string url)
+    public async Task<bool> IsUrlValidAsync(
+        string url,
+        CancellationToken cancellationToken = default)
     {
         if (ShortUrlRegex.IsMatch(url))
         {
-            var response = await _http.GetAsync(url);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var response = await _http.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken
+            );
+
             url = response.RequestMessage!.RequestUri!.ToString();
         }
 
