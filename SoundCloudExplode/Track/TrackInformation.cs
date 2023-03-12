@@ -137,6 +137,11 @@ public class TrackInformation : IBatchItem
 
     [JsonProperty("user")]
     public User.User? User { get; set; }
+
+    /// <summary>
+    /// Name of playlist/album
+    /// </summary>
+    public string? PlaylistName { get; set; }
 }
 
 public class Media

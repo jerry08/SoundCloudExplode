@@ -87,6 +87,9 @@ public class PlaylistClient
         {
             var tracks = await GetTracksAsync(url, cancellationToken: cancellationToken);
             playlist.Tracks = tracks.ToArray();
+
+            foreach (var track in playlist.Tracks)
+                track.PlaylistName = playlist.Title;
         }
 
         return playlist;
@@ -118,8 +121,16 @@ public class PlaylistClient
         {
             var ids = string.Join(",", chunk.Select(x => x.Id));
 
-            var response = await _http.ExecuteGetAsync($"https://api-v2.soundcloud.com/tracks?ids={ids}&limit={limit}&offset={offset}&client_id={Constants.ClientId}", cancellationToken);
-            yield return Batch.Create(JsonConvert.DeserializeObject<List<TrackInformation>>(response)!);
+            var response = await _http.ExecuteGetAsync(
+                $"https://api-v2.soundcloud.com/tracks?ids={ids}&limit={limit}&offset={offset}&client_id={Constants.ClientId}",
+                cancellationToken
+            );
+
+            var tracks = JsonConvert.DeserializeObject<List<TrackInformation>>(response)!;
+            foreach (var track in tracks)
+                track.PlaylistName = playlist.Title;
+
+            yield return Batch.Create(tracks);
         }
     }
 
