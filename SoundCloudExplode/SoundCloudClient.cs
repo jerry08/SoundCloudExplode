@@ -106,18 +106,18 @@ public class SoundCloudClient
     /// </summary>
     public async Task<string> GetClientIdAsync(CancellationToken cancellationToken = default)
     {
-        var html = await _http.ExecuteGetAsync(BaseUrl, cancellationToken);
+        var response = await _http.ExecuteGetAsync(BaseUrl, cancellationToken);
         var document = new HtmlDocument();
-        document.LoadHtml(html);
+        document.LoadHtml(response);
 
         var script = document.DocumentNode.Descendants()
             .Where(x => x.Name == "script").ToList();
 
         var script_url = script.Last().Attributes["src"].Value;
 
-        html = await _http.ExecuteGetAsync(script_url, cancellationToken);
+        response = await _http.ExecuteGetAsync(script_url, cancellationToken);
 
-        return html.Split(new string[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
+        return response.Split(new string[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
     }
 
     /// <summary>
