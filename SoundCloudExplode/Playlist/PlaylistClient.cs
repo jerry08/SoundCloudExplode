@@ -1,16 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
-using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Exceptions;
+using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Utils.Extensions;
 
 namespace SoundCloudExplode.Track;
@@ -111,24 +111,32 @@ public class PlaylistClient
         if (playlist is null || playlist.Tracks is null)
             yield break;
 
-        if (limit > 0)
-            playlist.Tracks = playlist.Tracks.Skip(offset).Take(limit).ToArray();
-        else if (offset > 0)
+        //if (limit > 0)
+        //    playlist.Tracks = playlist.Tracks.Skip(offset).Take(limit).ToArray();
+        //else if (offset > 0)
+        //    playlist.Tracks = playlist.Tracks.Skip(offset).ToArray();
+
+        if (offset > 0)
             playlist.Tracks = playlist.Tracks.Skip(offset).ToArray();
 
         //Soundcloud single request limit is 50
         foreach (var chunk in playlist.Tracks.ChunkBy(50))
         {
-            var ids = string.Join(",", chunk.Select(x => x.Id));
+            var ids = chunk.Select(x => x.Id).ToList();
+            var idsStr = string.Join(",", ids);
 
+            // Tracks are returned unordered here even though the ids are in the right order in the url
             var response = await _http.ExecuteGetAsync(
-                $"https://api-v2.soundcloud.com/tracks?ids={ids}&limit={limit}&offset={offset}&client_id={Constants.ClientId}",
+                $"https://api-v2.soundcloud.com/tracks?ids={idsStr}&limit={limit}&offset={offset}&client_id={Constants.ClientId}",
                 cancellationToken
             );
 
             var tracks = JsonConvert.DeserializeObject<List<TrackInformation>>(response)!;
             foreach (var track in tracks)
                 track.PlaylistName = playlist.Title;
+
+            // Set the right order
+            tracks = tracks.OrderBy(x => ids.IndexOf(x.Id)).ToList();
 
             yield return Batch.Create(tracks);
         }
