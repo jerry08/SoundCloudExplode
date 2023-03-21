@@ -28,6 +28,8 @@ internal static class Program
 
             if (await soundcloud.Playlists.IsUrlValidAsync(url))
             {
+                // Gets playlist (or album)
+                //var playlist = await soundcloud.Playlists.GetAsync(url);
                 var tracks = await soundcloud.Playlists.GetTracksAsync(url);
 
                 foreach (var track in tracks)
