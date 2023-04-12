@@ -1,88 +1,98 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using SoundCloudExplode.Playlist;
 
 namespace SoundCloudExplode.User;
 
 public class PlaylistUser
 {
-    [JsonProperty("avatar_url")]
+    [JsonPropertyName("avatar_url")]
     public Uri? AvatarUrl { get; set; }
 
+    [JsonPropertyName("city")]
     public object? City { get; set; }
 
-    [JsonProperty("comments_count")]
+    [JsonPropertyName("comments_count")]
     public long CommentsCount { get; set; }
 
-    [JsonProperty("country_code")]
+    [JsonPropertyName("country_code")]
     public string? CountryCode { get; set; }
 
-    [JsonProperty("created_at")]
+    [JsonPropertyName("created_at")]
     public DateTimeOffset? CreatedAt { get; set; }
 
-    [JsonProperty("creator_subscriptions")]
+    [JsonPropertyName("creator_subscriptions")]
     public CreatorSubscription[]? CreatorSubscriptions { get; set; }
 
-    [JsonProperty("creator_subscription")]
+    [JsonPropertyName("creator_subscription")]
     public CreatorSubscription? CreatorSubscription { get; set; }
 
+    [JsonPropertyName("description")]
     public object? Description { get; set; }
 
-    [JsonProperty("followers_count")]
+    [JsonPropertyName("followers_count")]
     public long? FollowersCount { get; set; }
 
-    [JsonProperty("followings_count")]
+    [JsonPropertyName("followings_count")]
     public long? FollowingsCount { get; set; }
 
-    [JsonProperty("first_name")]
+    [JsonPropertyName("first_name")]
     public string? FirstName { get; set; }
 
-    [JsonProperty("full_name")]
+    [JsonPropertyName("full_name")]
     public string? FullName { get; set; }
 
-    [JsonProperty("groups_count")]
+    [JsonPropertyName("groups_count")]
     public long? GroupsCount { get; set; }
 
+    [JsonPropertyName("id")]
     public long? Id { get; set; }
 
+    [JsonPropertyName("kind")]
     public string? Kind { get; set; }
 
-    [JsonProperty("last_modified")]
+    [JsonPropertyName("last_modified")]
     public DateTimeOffset? LastModified { get; set; }
 
-    [JsonProperty("last_name")]
+    [JsonPropertyName("last_name")]
     public string? LastName { get; set; }
 
-    [JsonProperty("likes_count")]
+    [JsonPropertyName("likes_count")]
     public long? LikesCount { get; set; }
 
-    [JsonProperty("playlist_likes_count")]
+    [JsonPropertyName("playlist_likes_count")]
     public long? PlaylistLikesCount { get; set; }
 
-    [JsonProperty("permalink")]
+    [JsonPropertyName("permalink")]
     public string? Permalink { get; set; }
 
-    [JsonProperty("permalink_url")]
+    [JsonPropertyName("permalink_url")]
     public Uri? PermalinkUrl { get; set; }
 
-    [JsonProperty("playlist_count")]
+    [JsonPropertyName("playlist_count")]
     public long? PlaylistCount { get; set; }
 
-    [JsonProperty("reposts_count")]
+    [JsonPropertyName("reposts_count")]
     public object? RepostsCount { get; set; }
 
-    [JsonProperty("track_count")]
+    [JsonPropertyName("track_count")]
     public long? TrackCount { get; set; }
 
+    [JsonPropertyName("uri")]
     public Uri? Uri { get; set; }
 
+    [JsonPropertyName("urn")]
     public string? Urn { get; set; }
 
+    [JsonPropertyName("username")]
     public string? Username { get; set; }
 
+    [JsonPropertyName("verified")]
     public bool Verified { get; set; }
 
+    [JsonPropertyName("visuals")]
     public Visuals? Visuals { get; set; }
 
+    [JsonPropertyName("badges")]
     public Badges? Badges { get; set; }
 }

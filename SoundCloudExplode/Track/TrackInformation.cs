@@ -1,141 +1,141 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using SoundCloudExplode.Common;
 
 namespace SoundCloudExplode.Track;
 
 public class TrackInformation : IBatchItem
 {
-    [JsonProperty("artwork_url")]
+    [JsonPropertyName("artwork_url")]
     public Uri? ArtworkUrl { get; set; }
 
-    [JsonProperty("caption")]
+    [JsonPropertyName("caption")]
     public object? Caption { get; set; }
 
-    [JsonProperty("commentable")]
+    [JsonPropertyName("commentable")]
     public bool Commentable { get; set; }
 
-    [JsonProperty("comment_count")]
-    public string? CommentCount { get; set; }
+    [JsonPropertyName("comment_count")]
+    public long? CommentCount { get; set; }
 
-    [JsonProperty("created_at")]
+    [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; set; }
 
-    [JsonProperty("description")]
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
 
-    [JsonProperty("downloadable")]
+    [JsonPropertyName("downloadable")]
     public bool Downloadable { get; set; }
 
-    [JsonProperty("download_count")]
+    [JsonPropertyName("download_count")]
     public long? DownloadCount { get; set; }
 
-    [JsonProperty("duration")]
+    [JsonPropertyName("duration")]
     public long? Duration { get; set; }
 
-    [JsonProperty("full_duration")]
+    [JsonPropertyName("full_duration")]
     public long? FullDuration { get; set; }
 
-    [JsonProperty("embeddable_by")]
+    [JsonPropertyName("embeddable_by")]
     public string? EmbeddableBy { get; set; }
 
-    [JsonProperty("genre")]
+    [JsonPropertyName("genre")]
     public string? Genre { get; set; }
 
-    [JsonProperty("has_downloads_left")]
+    [JsonPropertyName("has_downloads_left")]
     public bool HasDownloadsLeft { get; set; }
 
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public long Id { get; set; } = default!;
 
-    [JsonProperty("kind")]
+    [JsonPropertyName("kind")]
     public string? Kind { get; set; }
 
-    [JsonProperty("label_name")]
+    [JsonPropertyName("label_name")]
     public object? LabelName { get; set; }
 
-    [JsonProperty("last_modified")]
+    [JsonPropertyName("last_modified")]
     public DateTimeOffset LastModified { get; set; }
 
-    [JsonProperty("license")]
+    [JsonPropertyName("license")]
     public string? License { get; set; }
 
-    [JsonProperty("likes_count")]
+    [JsonPropertyName("likes_count")]
     public long? LikesCount { get; set; }
 
-    [JsonProperty("permalink")]
+    [JsonPropertyName("permalink")]
     public string? Permalink { get; set; }
 
-    [JsonProperty("permalink_url")]
+    [JsonPropertyName("permalink_url")]
     public Uri? PermalinkUrl { get; set; }
 
-    [JsonProperty("playback_count")]
+    [JsonPropertyName("playback_count")]
     public long? PlaybackCount { get; set; }
 
-    [JsonProperty("public")]
+    [JsonPropertyName("public")]
     public bool Public { get; set; }
 
-    [JsonProperty("publisher_metadata")]
+    [JsonPropertyName("publisher_metadata")]
     public PublisherMetadata? PublisherMetadata { get; set; }
 
-    [JsonProperty("purchase_title")]
+    [JsonPropertyName("purchase_title")]
     public object? PurchaseTitle { get; set; }
 
-    [JsonProperty("purchase_url")]
+    [JsonPropertyName("purchase_url")]
     public object? PurchaseUrl { get; set; }
 
-    [JsonProperty("release_date")]
+    [JsonPropertyName("release_date")]
     public object? ReleaseDate { get; set; }
 
-    [JsonProperty("reposts_count")]
+    [JsonPropertyName("reposts_count")]
     public long? RepostsCount { get; set; }
 
-    [JsonProperty("secret_token")]
+    [JsonPropertyName("secret_token")]
     public object? SecretToken { get; set; }
 
-    [JsonProperty("sharing")]
+    [JsonPropertyName("sharing")]
     public string? Sharing { get; set; }
 
-    [JsonProperty("state")]
+    [JsonPropertyName("state")]
     public string? State { get; set; }
 
-    [JsonProperty("streamable")]
+    [JsonPropertyName("streamable")]
     public bool Streamable { get; set; }
 
-    [JsonProperty("tag_list")]
+    [JsonPropertyName("tag_list")]
     public string? TagList { get; set; }
 
-    [JsonProperty("title")]
+    [JsonPropertyName("title")]
     public string? Title { get; set; }
 
-    [JsonProperty("uri")]
+    [JsonPropertyName("uri")]
     public Uri? Uri { get; set; }
 
-    [JsonProperty("urn")]
+    [JsonPropertyName("urn")]
     public string? Urn { get; set; }
 
-    [JsonProperty("user_id")]
+    [JsonPropertyName("user_id")]
     public long? UserId { get; set; }
 
-    [JsonProperty("visuals")]
+    [JsonPropertyName("visuals")]
     public object? Visuals { get; set; }
 
-    [JsonProperty("waveform_url")]
+    [JsonPropertyName("waveform_url")]
     public Uri? WaveformUrl { get; set; }
 
-    [JsonProperty("display_date")]
+    [JsonPropertyName("display_date")]
     public DateTimeOffset DisplayDate { get; set; }
 
-    [JsonProperty("media")]
+    [JsonPropertyName("media")]
     public Media? Media { get; set; }
 
-    [JsonProperty("monetization_model")]
+    [JsonPropertyName("monetization_model")]
     public string? MonetizationModel { get; set; }
 
-    [JsonProperty("policy")]
+    [JsonPropertyName("policy")]
     public string? Policy { get; set; }
 
-    [JsonProperty("user")]
+    [JsonPropertyName("user")]
     public User.User? User { get; set; }
 
     /// <summary>
@@ -146,51 +146,51 @@ public class TrackInformation : IBatchItem
 
 public class Media
 {
-    [JsonProperty("transcodings")]
+    [JsonPropertyName("transcodings")]
     public Transcoding[]? Transcodings { get; set; }
 }
 
 public class Transcoding
 {
-    [JsonProperty("url")]
+    [JsonPropertyName("url")]
     public Uri? Url { get; set; }
 
-    [JsonProperty("preset")]
+    [JsonPropertyName("preset")]
     public string? Preset { get; set; }
 
-    [JsonProperty("duration")]
+    [JsonPropertyName("duration")]
     public long? Duration { get; set; }
 
-    [JsonProperty("snipped")]
+    [JsonPropertyName("snipped")]
     public bool Snipped { get; set; }
 
-    [JsonProperty("format")]
+    [JsonPropertyName("format")]
     public Format? Format { get; set; }
 
-    [JsonProperty("quality")]
+    [JsonPropertyName("quality")]
     public string? Quality { get; set; }
 }
 
 public class Format
 {
-    [JsonProperty("protocol")]
+    [JsonPropertyName("protocol")]
     public string? Protocol { get; set; }
 
-    [JsonProperty("mime_type")]
+    [JsonPropertyName("mime_type")]
     public string? MimeType { get; set; }
 }
 
 public class PublisherMetadata
 {
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public long? Id { get; set; }
 
-    [JsonProperty("urn")]
+    [JsonPropertyName("urn")]
     public string? Urn { get; set; }
 
-    [JsonProperty("artist")]
+    [JsonPropertyName("artist")]
     public string? Artist { get; set; }
 
-    [JsonProperty("contains_music")]
+    [JsonPropertyName("contains_music")]
     public bool ContainsMusic { get; set; }
 }

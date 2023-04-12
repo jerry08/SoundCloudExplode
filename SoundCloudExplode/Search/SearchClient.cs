@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using SoundCloudExplode.Track;
-using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Utils.Extensions;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace SoundCloudExplode.Search;
 
@@ -77,7 +72,7 @@ public class SearchClient
 
         var response = await _http.ExecuteGetAsync(url, cancellationToken);
 
-        var data = JArray.Parse(JObject.Parse(response)!["collection"]!.ToString());
+        var data = JsonNode.Parse(response)!["collection"]!.AsArray();
 
         foreach (var item in data)
         {
@@ -93,7 +88,7 @@ public class SearchClient
             //User
             if (permalinkUri.Segments.Length == 2)
             {
-                var user = JsonConvert.DeserializeObject<UserSearchResult>(item.ToString())!;
+                var user = JsonSerializer.Deserialize<UserSearchResult>(item.ToString())!;
                 results.Add(user);
                 continue;
             }
@@ -101,7 +96,7 @@ public class SearchClient
             //Track
             if (permalinkUri.Segments.Length == 3)
             {
-                var track = JsonConvert.DeserializeObject<TrackSearchResult>(item.ToString())!;
+                var track = JsonSerializer.Deserialize<TrackSearchResult>(item.ToString())!;
                 results.Add(track);
                 continue;
             }
@@ -110,7 +105,7 @@ public class SearchClient
             if (permalinkUri.Segments.Length == 4 &&
                 permalinkUri.Segments[2] == "sets/")
             {
-                var playlist = JsonConvert.DeserializeObject<PlaylistSearchResult>(item.ToString())!;
+                var playlist = JsonSerializer.Deserialize<PlaylistSearchResult>(item.ToString())!;
                 results.Add(playlist);
             }
         }

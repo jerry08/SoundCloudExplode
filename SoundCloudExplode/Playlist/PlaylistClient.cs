@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
@@ -81,7 +81,7 @@ public class PlaylistClient
             throw new SoundcloudExplodeException("Invalid playlist url");
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
-        var playlist = JsonConvert.DeserializeObject<PlaylistInformation>(resolvedJson)!;
+        var playlist = JsonSerializer.Deserialize<PlaylistInformation>(resolvedJson)!;
 
         if (autoPopulateAllTracks)
         {
@@ -131,7 +131,7 @@ public class PlaylistClient
                 cancellationToken
             );
 
-            var tracks = JsonConvert.DeserializeObject<List<TrackInformation>>(response)!;
+            var tracks = JsonSerializer.Deserialize<List<TrackInformation>>(response)!;
             foreach (var track in tracks)
                 track.PlaylistName = playlist.Title;
 

@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Utils.Extensions;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace SoundCloudExplode.Track;
 
@@ -73,7 +73,7 @@ public class TrackClient
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
 
-        return JsonConvert.DeserializeObject<TrackInformation>(resolvedJson)!;
+        return JsonSerializer.Deserialize<TrackInformation>(resolvedJson)!;
     }
 
     /// <summary>
@@ -87,7 +87,7 @@ public class TrackClient
         if (trackInfoJson is null)
             return null;
 
-        var track = JsonConvert.DeserializeObject<TrackInformation>(trackInfoJson);
+        var track = JsonSerializer.Deserialize<TrackInformation>(trackInfoJson);
         return track is null || track.PermalinkUrl is null ? null : (track.PermalinkUrl?.ToString());
     }
 
@@ -118,14 +118,14 @@ public class TrackClient
         {
             var tracks = new List<TrackInformation>
             {
-                JsonConvert.DeserializeObject<TrackInformation>(resolvedJson)!
+                JsonSerializer.Deserialize<TrackInformation>(resolvedJson)!
             };
 
             yield return Batch.Create(tracks);
             yield break;
         }
 
-        var user = JsonConvert.DeserializeObject<User.User>(resolvedJson);
+        var user = JsonSerializer.Deserialize<User.User>(resolvedJson);
 
         var next_href = default(string?);
 
@@ -142,11 +142,12 @@ public class TrackClient
             url = next_href ?? $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?limit=200&client_id={_endpoint.ClientId}";
 
             var tracksJson = await _http.ExecuteGetAsync(url, cancellationToken);
-            var tracksJObj = JObject.Parse(tracksJson);
+            var tracksJObj = JsonNode.Parse(tracksJson);
             var collToken = tracksJObj?["collection"]?.ToString();
 
-            if (collToken is not null && JsonConvert.DeserializeObject
-                <List<TrackInformation>>(collToken) is List<TrackInformation> list)
+            if (collToken is not null
+                && JsonSerializer.Deserialize<List<TrackInformation>>(collToken)
+                    is List<TrackInformation> list)
             {
                 tracks.AddRange(list);
                 yield return Batch.Create(tracks);
@@ -247,7 +248,7 @@ public class TrackClient
 
         var trackMedia = await _http.ExecuteGetAsync(trackUrl, cancellationToken);
 
-        var track2 = JsonConvert.DeserializeObject<TrackMediaInformation>(trackMedia);
+        var track2 = JsonSerializer.Deserialize<TrackMediaInformation>(trackMedia);
         if (track2 is null)
             return null;
 

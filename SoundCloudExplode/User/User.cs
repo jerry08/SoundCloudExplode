@@ -1,65 +1,65 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using SoundCloudExplode.Common;
 
 namespace SoundCloudExplode.User;
 
 public class User : IBatchItem
 {
-    [JsonProperty("avatar_url")]
+    [JsonPropertyName("avatar_url")]
     public Uri? AvatarUrl { get; set; }
 
-    [JsonProperty("first_name")]
+    [JsonPropertyName("first_name")]
     public string? FirstName { get; set; }
 
-    [JsonProperty("full_name")]
+    [JsonPropertyName("full_name")]
     public string? FullName { get; set; }
 
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public long? Id { get; set; }
 
-    [JsonProperty("kind")]
+    [JsonPropertyName("kind")]
     public string? Kind { get; set; }
 
-    [JsonProperty("last_modified")]
+    [JsonPropertyName("last_modified")]
     public DateTimeOffset? LastModified { get; set; }
 
-    [JsonProperty("last_name")]
+    [JsonPropertyName("last_name")]
     public string? LastName { get; set; }
 
-    [JsonProperty("permalink")]
+    [JsonPropertyName("permalink")]
     public string? Permalink { get; set; }
 
-    [JsonProperty("permalink_url")]
+    [JsonPropertyName("permalink_url")]
     public Uri? PermalinkUrl { get; set; }
 
-    [JsonProperty("uri")]
+    [JsonPropertyName("uri")]
     public Uri? Uri { get; set; }
 
-    [JsonProperty("urn")]
+    [JsonPropertyName("urn")]
     public string? Urn { get; set; }
 
-    [JsonProperty("username")]
+    [JsonPropertyName("username")]
     public string? Username { get; set; }
 
-    [JsonProperty("verified")]
+    [JsonPropertyName("verified")]
     public bool Verified { get; set; }
 
-    [JsonProperty("city")]
+    [JsonPropertyName("city")]
     public string? City { get; set; }
 
-    [JsonProperty("country_code")]
+    [JsonPropertyName("country_code")]
     public string? CountryCode { get; set; }
 
-    [JsonProperty("badges")]
+    [JsonPropertyName("badges")]
     public Badges? Badges { get; set; }
 }
 
 public class Badges
 {
-    [JsonProperty("pro_unlimited")]
+    [JsonPropertyName("pro_unlimited")]
     public bool ProUnlimited { get; set; }
 
-    [JsonProperty("verified")]
+    [JsonPropertyName("verified")]
     public bool Verified { get; set; }
 }

@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Runtime.CompilerServices;
-using Newtonsoft.Json;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
-using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Exceptions;
-using SoundCloudExplode.Utils.Extensions;
+using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Track;
-using Newtonsoft.Json.Linq;
+using SoundCloudExplode.Utils.Extensions;
 
 namespace SoundCloudExplode.User;
 
@@ -69,7 +67,7 @@ public class UserClient
             throw new SoundcloudExplodeException("Invalid user url");
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
-        return JsonConvert.DeserializeObject<User>(resolvedJson)!;
+        return JsonSerializer.Deserialize<User>(resolvedJson)!;
     }
 
     /// <summary>
@@ -90,9 +88,9 @@ public class UserClient
             $"https://api-v2.soundcloud.com/users/{user.Id}/toptracks?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
             cancellationToken);
 
-        var data = JObject.Parse(response)!["collection"]!.ToString();
+        var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonConvert.DeserializeObject<List<TrackInformation>>(data)!);
+        yield return Batch.Create(JsonSerializer.Deserialize<List<TrackInformation>>(data)!);
     }
 
     /// <summary>
@@ -123,9 +121,9 @@ public class UserClient
             $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
             cancellationToken);
 
-        var data = JObject.Parse(response)!["collection"]!.ToString();
+        var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonConvert.DeserializeObject<List<TrackInformation>>(data)!);
+        yield return Batch.Create(JsonSerializer.Deserialize<List<TrackInformation>>(data)!);
     }
 
     /// <summary>
@@ -156,9 +154,9 @@ public class UserClient
             $"https://api-v2.soundcloud.com/users/{user.Id}/playlists?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
             cancellationToken);
 
-        var data = JObject.Parse(response)!["collection"]!.ToString();
+        var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonConvert.DeserializeObject<List<PlaylistInformation>>(data)!);
+        yield return Batch.Create(JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!);
     }
 
     /// <summary>
@@ -189,9 +187,9 @@ public class UserClient
             $"https://api-v2.soundcloud.com/users/{user.Id}/albums?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
             cancellationToken);
 
-        var data = JObject.Parse(response)!["collection"]!.ToString();
+        var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonConvert.DeserializeObject<List<PlaylistInformation>>(data)!);
+        yield return Batch.Create(JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!);
     }
 
     /// <summary>
