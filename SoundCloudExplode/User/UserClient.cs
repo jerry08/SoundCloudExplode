@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
-using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Track;
@@ -71,13 +69,13 @@ public class UserClient
     }
 
     /// <summary>
-    /// Enumerates batches of tracks included in the specified user.
+    /// Gets tracks included in the specified user url.
     /// </summary>
-    public async IAsyncEnumerable<Batch<TrackInformation>> GetTrackBatchesAsync(
+    public async ValueTask<List<TrackInformation>> GetTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
@@ -90,27 +88,17 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonSerializer.Deserialize<List<TrackInformation>>(data)!);
+        return JsonSerializer.Deserialize<List<TrackInformation>>(data)!;
     }
 
     /// <summary>
-    /// Enumerates tracks included in the specified user url.
+    /// Gets popular tracks included in the specified user url.
     /// </summary>
-    public IAsyncEnumerable<TrackInformation> GetTracksAsync(
+    public async ValueTask<List<TrackInformation>> GetPopularTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default) =>
-        GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
-
-    /// <summary>
-    /// Enumerates batches of popular tracks included in the specified user.
-    /// </summary>
-    public async IAsyncEnumerable<Batch<TrackInformation>> GetPopularTrackBatchesAsync(
-        string url,
-        int offset = Constants.DefaultOffset,
-        int limit = Constants.DefaultLimit,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
@@ -123,27 +111,17 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonSerializer.Deserialize<List<TrackInformation>>(data)!);
+        return JsonSerializer.Deserialize<List<TrackInformation>>(data)!;
     }
 
     /// <summary>
-    /// Enumerates popular tracks included in the specified user url.
+    /// Gets playlists of tracks included in the specified user url.
     /// </summary>
-    public IAsyncEnumerable<TrackInformation> GetPopularTracksAsync(
+    public async ValueTask<List<PlaylistInformation>> GetPlaylistsAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default) =>
-        GetPopularTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
-
-    /// <summary>
-    /// Enumerates playlists of tracks included in the specified user.
-    /// </summary>
-    public async IAsyncEnumerable<Batch<PlaylistInformation>> GetPlaylistBatchesAsync(
-        string url,
-        int offset = Constants.DefaultOffset,
-        int limit = Constants.DefaultLimit,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
@@ -156,27 +134,17 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!);
+        return JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!;
     }
 
     /// <summary>
-    /// Enumerates playlists included in the specified user url.
+    /// Gets albums included in the specified user url.
     /// </summary>
-    public IAsyncEnumerable<PlaylistInformation> GetPlaylistsAsync(
+    public async ValueTask<List<PlaylistInformation>> GetAlbumsAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default) =>
-        GetPlaylistBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
-
-    /// <summary>
-    /// Enumerates batches of albums included in the specified user.
-    /// </summary>
-    public async IAsyncEnumerable<Batch<PlaylistInformation>> GetAlbumBatchesAsync(
-        string url,
-        int offset = Constants.DefaultOffset,
-        int limit = Constants.DefaultLimit,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
@@ -189,16 +157,6 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        yield return Batch.Create(JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!);
+        return JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!;
     }
-
-    /// <summary>
-    /// Enumerates albums included in the specified user url.
-    /// </summary>
-    public IAsyncEnumerable<PlaylistInformation> GetAlbumsAsync(
-        string url,
-        int offset = Constants.DefaultOffset,
-        int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default) =>
-        GetAlbumBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
 }

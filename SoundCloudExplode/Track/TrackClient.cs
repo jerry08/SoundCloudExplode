@@ -1,17 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Runtime.CompilerServices;
 using SoundCloudExplode.Bridge;
-using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Utils.Extensions;
-using System.Text.Json.Nodes;
-using System.Text.Json;
 
 namespace SoundCloudExplode.Track;
 
@@ -103,11 +101,11 @@ public class TrackClient
     }
 
     /// <summary>
-    /// Enumerates batches of tracks included in the specified url.
+    /// Gets batches of tracks included in the specified url.
     /// </summary>
-    public async IAsyncEnumerable<Batch<TrackInformation>> GetTrackBatchesAsync(
+    public async ValueTask<List<TrackInformation>> GetTracksAsync(
         string url,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         if (!await IsUrlValidAsync(url))
             throw new SoundcloudExplodeException("Invalid track url");
@@ -121,13 +119,14 @@ public class TrackClient
                 JsonSerializer.Deserialize<TrackInformation>(resolvedJson)!
             };
 
-            yield return Batch.Create(tracks);
-            yield break;
+            return tracks;
         }
 
         var user = JsonSerializer.Deserialize<User.User>(resolvedJson);
 
         var next_href = default(string?);
+
+        var tracks2 = new List<TrackInformation>();
 
         while (true)
         {
@@ -150,7 +149,6 @@ public class TrackClient
                     is List<TrackInformation> list)
             {
                 tracks.AddRange(list);
-                yield return Batch.Create(tracks);
             }
 
             if (!tracks.Any())
@@ -163,15 +161,9 @@ public class TrackClient
 
             next_href += $"&client_id={_endpoint.ClientId}";
         }
-    }
 
-    /// <summary>
-    /// Enumerates tracks included in the specified url.
-    /// </summary>
-    public IAsyncEnumerable<TrackInformation> GetTracksAsync(
-        string url,
-        CancellationToken cancellationToken = default) =>
-        GetTrackBatchesAsync(url, cancellationToken).FlattenAsync();
+        return tracks2;
+    }
 
     private async ValueTask<string?> QueryTrackMp3Async(
         string trackM3u8,

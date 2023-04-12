@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using SoundCloudExplode.Common;
 using SoundCloudExplode.DemoConsole.Utils;
 
 namespace SoundCloudExplode.DemoConsole;

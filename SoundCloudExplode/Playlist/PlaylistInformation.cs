@@ -1,12 +1,11 @@
 ﻿using System;
 using SoundCloudExplode.User;
 using SoundCloudExplode.Track;
-using SoundCloudExplode.Common;
 using System.Text.Json.Serialization;
 
 namespace SoundCloudExplode.Playlist;
 
-public class PlaylistInformation : IBatchItem
+public class PlaylistInformation
 {
     [JsonPropertyName("artwork_url")]
     public Uri? ArtworkUrl { get; set; }

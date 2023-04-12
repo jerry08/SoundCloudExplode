@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
-using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Playlist;
 using SoundCloudExplode.Utils.Extensions;
@@ -96,20 +94,20 @@ public class PlaylistClient
     }
 
     /// <summary>
-    /// Enumerates batches of tracks included in the specified playlist.
+    /// Gets tracks included in the specified playlist url.
     /// </summary>
-    public async IAsyncEnumerable<Batch<TrackInformation>> GetTrackBatchesAsync(
+    public async ValueTask<List<TrackInformation>> GetTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         if (!await IsUrlValidAsync(url))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
         var playlist = await GetAsync(url, false, cancellationToken);
         if (playlist is null || playlist.Tracks is null)
-            yield break;
+            return new();
 
         //if (limit > 0)
         //    playlist.Tracks = playlist.Tracks.Skip(offset).Take(limit).ToArray();
@@ -118,6 +116,8 @@ public class PlaylistClient
 
         if (offset > 0)
             playlist.Tracks = playlist.Tracks.Skip(offset).ToArray();
+
+        var list = new List<TrackInformation>();
 
         //Soundcloud single request limit is 50
         foreach (var chunk in playlist.Tracks.ChunkBy(50))
@@ -138,17 +138,9 @@ public class PlaylistClient
             // Set the right order
             tracks = tracks.OrderBy(x => ids.IndexOf(x.Id)).ToList();
 
-            yield return Batch.Create(tracks);
+            list.AddRange(tracks);
         }
-    }
 
-    /// <summary>
-    /// Enumerates tracks included in the specified playlist url.
-    /// </summary>
-    public IAsyncEnumerable<TrackInformation> GetTracksAsync(
-        string url,
-        int offset = Constants.DefaultOffset,
-        int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default) =>
-        GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
+        return list;
+    }
 }

@@ -1,6 +1,4 @@
-﻿using SoundCloudExplode.Common;
-
-namespace SoundCloudExplode.Search;
+﻿namespace SoundCloudExplode.Search;
 
 /// <summary>
 /// <p>
@@ -17,7 +15,7 @@ namespace SoundCloudExplode.Search;
 /// </p>
 /// </summary>
 
-public interface ISearchResult : IBatchItem
+public interface ISearchResult
 {
     /// <summary>
     /// Result URL.

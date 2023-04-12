@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using SoundCloudExplode.Common;
 
 namespace SoundCloudExplode.User;
 
-public class User : IBatchItem
+public class User
 {
     [JsonPropertyName("avatar_url")]
     public Uri? AvatarUrl { get; set; }
