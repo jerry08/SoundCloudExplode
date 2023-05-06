@@ -83,10 +83,6 @@ var tracks = await soundcloud.Playlists.GetTracksAsync(
 
 // Get only the first 20 playlist tracks
 var tracksSubset = await soundcloud.Playlists
-    .GetTracksAsync("https://soundcloud.com/tommy-enjoy/sets/aimer")
-    .CollectAsync(20);
-// OR
-var tracksSubset = await soundcloud.Playlists
     .GetTracksAsync(
         "https://soundcloud.com/tommy-enjoy/sets/aimer",
         limit: 20
@@ -101,42 +97,6 @@ var tracksSubset = await soundcloud.Playlists
     );
 ```
 
-You can also enumerate the tracks iteratively without waiting for the whole list to load:
-
-```csharp
-using SoundCloudExplode;
-
-var soundcloud = new SoundCloudClient();
-
-await foreach (var track in soundcloud.Playlists.GetTracksAsync(
-    "https://soundcloud.com/tommy-enjoy/sets/aimer"
-))
-{
-    var title = track.Title;
-    var duration = track.Duration;
-}
-```
-
-If you need precise control over how many requests you send to Soundcloud, use `Playlists.GetTrackBatchesAsync(...)` which returns tracks wrapped in batches:
-
-```csharp
-using SoundCloudExplode;
-
-var soundcloud = new SoundCloudClient();
-
-// Each batch corresponds to one request
-await foreach (var batch in soundcloud.Playlists.GetTrackBatchesAsync(
-    "https://soundcloud.com/tommy-enjoy/sets/aimer"
-))
-{
-    foreach (var track in batch.Items)
-    {
-        var title = track.Title;
-        var duration = track.Duration;
-    }
-}
-```
-
 ### Albums
 **Note:** Use the same method as retrieving playlists to get albums because they are the same. 
 
@@ -148,7 +108,9 @@ using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
 
-await foreach (var result in soundcloud.Search.GetResultsAsync("banda neira"))
+var results = await soundcloud.Search.GetResultsAsync("banda neira");
+
+foreach (var result in results)
 {
     // Use pattern matching to handle different results (tracks, playlists, users)
     switch (result)
@@ -188,13 +150,12 @@ using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
 
-var track = await soundcloud.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
+var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
 var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
 
 await soundcloud.DownloadAsync(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
 ```
-
 
 You can request the download url for a particular track by calling `Tracks.GetDownloadUrlAsync(...)`:
 
