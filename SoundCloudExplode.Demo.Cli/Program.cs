@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using SoundCloudExplode.DemoConsole.Utils;
+using Spectre.Console;
 
-namespace SoundCloudExplode.DemoConsole;
+namespace SoundCloudExplode.Demo.Cli;
 
 internal static class Program
 {
@@ -37,11 +37,13 @@ internal static class Program
                     var trackName = string.Join("_", track.Title!.Split(Path.GetInvalidFileNameChars()));
                     var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
 
-                    using (var progress = new ConsoleProgress())
+                    await AnsiConsole.Progress().StartAsync(async ctx =>
                     {
-                        Console.WriteLine($"Downloading {trackName}");
-                        await soundcloud.DownloadAsync(track, trackPath, progress);
-                    }
+                        var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName})[/]");
+                        progressTask.MaxValue = 1;
+
+                        await soundcloud.DownloadAsync(track, trackPath, progressTask);
+                    });
 
                     Console.WriteLine("Done");
                     Console.WriteLine($"Track saved to '{trackPath}'");
@@ -60,11 +62,13 @@ internal static class Program
                 var trackName = string.Join("_", track.Title!.Split(Path.GetInvalidFileNameChars()));
                 var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
 
-                using (var progress = new ConsoleProgress())
+                await AnsiConsole.Progress().StartAsync(async ctx =>
                 {
-                    Console.WriteLine($"Downloading {trackName}");
-                    await soundcloud.DownloadAsync(track, trackPath, progress);
-                }
+                    var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName})[/]");
+                    progressTask.MaxValue = 1;
+
+                    await soundcloud.DownloadAsync(track, trackPath, progressTask);
+                });
 
                 Console.WriteLine("Done");
                 Console.WriteLine($"Track saved to '{trackPath}'");
