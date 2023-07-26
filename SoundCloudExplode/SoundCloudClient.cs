@@ -1,18 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using SoundCloudExplode.Track;
-using SoundCloudExplode.Search;
 using SoundCloudExplode.Bridge;
+using SoundCloudExplode.Playlists;
+using SoundCloudExplode.Search;
+using SoundCloudExplode.Tracks;
+using SoundCloudExplode.Users;
 using SoundCloudExplode.Utils;
 using SoundCloudExplode.Utils.Extensions;
-using SoundCloudExplode.User;
 
 namespace SoundCloudExplode;
 
@@ -61,8 +62,10 @@ public class SoundCloudClient
         ClientId = clientId;
         _http = http;
 
-        _endpoint = new(http);
-        _endpoint.ClientId = clientId;
+        _endpoint = new(http)
+        {
+            ClientId = clientId
+        };
 
         Search = new(http, _endpoint);
         Tracks = new(http, _endpoint);
@@ -124,20 +127,15 @@ public class SoundCloudClient
     /// Downloads a track
     /// </summary>
     public async ValueTask DownloadAsync(
-        TrackInformation track,
+        Track track,
         string filePath,
         IProgress<double>? progress = null,
+        Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
         var mp3TrackMediaUrl = await Tracks.GetDownloadUrlAsync(track, cancellationToken);
         if (mp3TrackMediaUrl is null)
             return;
-
-        var totalLength = await _http.GetFileSizeAsync(mp3TrackMediaUrl, cancellationToken);
-
-        var downloadRequest = WebRequest.Create(mp3TrackMediaUrl);
-        var downloadResponse = downloadRequest.GetResponse();
-        var stream = downloadResponse.GetResponseStream();
 
         var dir = Path.GetDirectoryName(filePath);
         if (dir is null)
@@ -146,43 +144,41 @@ public class SoundCloudClient
         if (!Directory.Exists(dir))
             Directory.CreateDirectory(dir);
 
-        //Create a stream for the file
-        var file = File.Create(filePath);
+        using var destination = File.Create(filePath);
 
-        try
+        var request = new HttpRequestMessage(HttpMethod.Get, mp3TrackMediaUrl);
+
+        if (headers is not null)
         {
-            double totProgress = 0;
-
-            //This controls how many bytes to read at a time and send to the client
-            int bytesToRead = 10000;
-
-            // Buffer to read bytes in chunk size specified above
-            byte[] buffer = new byte[bytesToRead];
-
-            int length;
-            do
-            {
-                // Read data into the buffer.
-                length = stream.Read(buffer, 0, bytesToRead);
-
-                // and write it out to the response's output stream
-                file.Write(buffer, 0, length);
-
-                // Flush the data
-                stream.Flush();
-
-                //Clear the buffer
-                buffer = new byte[bytesToRead];
-
-                totProgress = (double)file.Length / (double)totalLength * 100;
-
-                progress?.Report(totProgress / 100);
-            } while (length > 0); //Repeat until no data is read
+            foreach (var (key, value) in headers)
+                request.Headers.TryAddWithoutValidation(key, value);
         }
-        finally
+
+        var response = await _http.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
         {
-            file?.Close();
-            stream?.Close();
+            throw new HttpRequestException(
+                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})." +
+                Environment.NewLine +
+                "Request:" +
+                Environment.NewLine +
+                request
+            );
         }
+
+        var totalLength = response.Content.Headers.ContentLength ?? 0;
+
+        var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        await stream.CopyToAsync(
+            destination,
+            totalLength,
+            progress,
+            cancellationToken: cancellationToken);
     }
 }

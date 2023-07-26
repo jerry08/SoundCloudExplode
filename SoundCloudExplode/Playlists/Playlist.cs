@@ -1,11 +1,11 @@
 ﻿using System;
-using SoundCloudExplode.User;
-using SoundCloudExplode.Track;
 using System.Text.Json.Serialization;
+using SoundCloudExplode.Tracks;
+using SoundCloudExplode.Users;
 
-namespace SoundCloudExplode.Playlist;
+namespace SoundCloudExplode.Playlists;
 
-public class PlaylistInformation
+public class Playlist
 {
     [JsonPropertyName("artwork_url")]
     public Uri? ArtworkUrl { get; set; }
@@ -101,7 +101,7 @@ public class PlaylistInformation
     public PlaylistUser? User { get; set; }
 
     [JsonPropertyName("tracks")]
-    public TrackInformation[]? Tracks { get; set; }
+    public Track[]? Tracks { get; set; }
 
     [JsonPropertyName("track_count")]
     public long? TrackCount { get; set; }

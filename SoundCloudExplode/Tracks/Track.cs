@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using SoundCloudExplode.Users;
 
-namespace SoundCloudExplode.Track;
+namespace SoundCloudExplode.Tracks;
 
-public class TrackInformation
+public class Track
 {
     [JsonPropertyName("artwork_url")]
     public Uri? ArtworkUrl { get; set; }
@@ -135,7 +136,7 @@ public class TrackInformation
     public string? Policy { get; set; }
 
     [JsonPropertyName("user")]
-    public User.User? User { get; set; }
+    public User? User { get; set; }
 
     /// <summary>
     /// Name of playlist/album

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using SoundCloudExplode.Demo.Cli.Utils;
 using Spectre.Console;
 
 namespace SoundCloudExplode.Demo.Cli;
@@ -34,12 +35,12 @@ internal static class Program
                 foreach (var track in tracks)
                 {
                     // Download the stream
-                    var trackName = string.Join("_", track.Title!.Split(Path.GetInvalidFileNameChars()));
+                    var trackName = PathEx.EscapeFileName(track.Title!);
                     var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
 
                     await AnsiConsole.Progress().StartAsync(async ctx =>
                     {
-                        var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName})[/]");
+                        var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName.EscapeMarkup()})[/]");
                         progressTask.MaxValue = 1;
 
                         await soundcloud.DownloadAsync(track, trackPath, progressTask);
@@ -59,12 +60,12 @@ internal static class Program
                 }
 
                 // Download the stream
-                var trackName = string.Join("_", track.Title!.Split(Path.GetInvalidFileNameChars()));
+                var trackName = PathEx.EscapeFileName(track.Title!);
                 var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
 
                 await AnsiConsole.Progress().StartAsync(async ctx =>
                 {
-                    var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName})[/]");
+                    var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName.EscapeMarkup()})[/]");
                     progressTask.MaxValue = 1;
 
                     await soundcloud.DownloadAsync(track, trackPath, progressTask);
@@ -78,10 +79,5 @@ internal static class Program
                 Console.WriteLine("Bad Url");
             }
         }
-    }
-
-    public static string ReplaceInvalidChars(string fileName)
-    {
-        return string.Join("_", fileName.Split(Path.GetInvalidFileNameChars()));
     }
 }

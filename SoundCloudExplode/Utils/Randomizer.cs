@@ -9,15 +9,18 @@ namespace SoundCloudExplode.Utils;
 /// </summary>
 public static class Randomizer
 {
-    private static readonly RNGCryptoServiceProvider Generator = new RNGCryptoServiceProvider();
-
     private static Random Generate()
     {
         var buffer = new byte[4];
-        Generator.GetBytes(buffer);
+
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(buffer);
+
         return new Random(BitConverter.ToInt32(buffer, 0));
     }
 
-    public static Random Instance => _rand ?? (_rand = Generate());
-    [ThreadStatic] private static Random _rand = default!;
+    public static Random Instance => _rand ??= Generate();
+
+    [ThreadStatic]
+    private static Random _rand = default!;
 }

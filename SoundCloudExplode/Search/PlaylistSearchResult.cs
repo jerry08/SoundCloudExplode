@@ -1,8 +1,8 @@
-﻿using SoundCloudExplode.Playlist;
+﻿using SoundCloudExplode.Playlists;
 
 namespace SoundCloudExplode.Search;
 
-public class PlaylistSearchResult : PlaylistInformation, ISearchResult
+public class PlaylistSearchResult : Playlist, ISearchResult
 {
     public string? Url => PermalinkUrl?.ToString();
 }

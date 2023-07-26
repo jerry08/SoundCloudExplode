@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace SoundCloudExplode.User;
+namespace SoundCloudExplode.Users;
 
 public class User
 {

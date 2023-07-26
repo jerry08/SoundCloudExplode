@@ -1,6 +1,8 @@
-﻿namespace SoundCloudExplode.Search;
+﻿using SoundCloudExplode.Users;
 
-public class UserSearchResult : User.User, ISearchResult
+namespace SoundCloudExplode.Search;
+
+public class UserSearchResult : User, ISearchResult
 {
     public string? Url => PermalinkUrl?.ToString();
 

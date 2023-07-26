@@ -7,11 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Exceptions;
-using SoundCloudExplode.Playlist;
-using SoundCloudExplode.Track;
+using SoundCloudExplode.Playlists;
+using SoundCloudExplode.Tracks;
 using SoundCloudExplode.Utils.Extensions;
 
-namespace SoundCloudExplode.User;
+namespace SoundCloudExplode.Users;
 
 /// <summary>
 /// Operations related to Soundcloud user.
@@ -71,7 +71,7 @@ public class UserClient
     /// <summary>
     /// Gets tracks included in the specified user url.
     /// </summary>
-    public async ValueTask<List<TrackInformation>> GetTracksAsync(
+    public async ValueTask<List<Track>> GetTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
@@ -88,13 +88,13 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        return JsonSerializer.Deserialize<List<TrackInformation>>(data)!;
+        return JsonSerializer.Deserialize<List<Track>>(data)!;
     }
 
     /// <summary>
     /// Gets popular tracks included in the specified user url.
     /// </summary>
-    public async ValueTask<List<TrackInformation>> GetPopularTracksAsync(
+    public async ValueTask<List<Track>> GetPopularTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
@@ -111,13 +111,13 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        return JsonSerializer.Deserialize<List<TrackInformation>>(data)!;
+        return JsonSerializer.Deserialize<List<Track>>(data)!;
     }
 
     /// <summary>
     /// Gets playlists of tracks included in the specified user url.
     /// </summary>
-    public async ValueTask<List<PlaylistInformation>> GetPlaylistsAsync(
+    public async ValueTask<List<Playlist>> GetPlaylistsAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
@@ -134,13 +134,13 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        return JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!;
+        return JsonSerializer.Deserialize<List<Playlist>>(data)!;
     }
 
     /// <summary>
     /// Gets albums included in the specified user url.
     /// </summary>
-    public async ValueTask<List<PlaylistInformation>> GetAlbumsAsync(
+    public async ValueTask<List<Playlist>> GetAlbumsAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
@@ -157,6 +157,6 @@ public class UserClient
 
         var data = JsonNode.Parse(response)!["collection"]!.ToString();
 
-        return JsonSerializer.Deserialize<List<PlaylistInformation>>(data)!;
+        return JsonSerializer.Deserialize<List<Playlist>>(data)!;
     }
 }

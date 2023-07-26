@@ -8,10 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Exceptions;
-using SoundCloudExplode.Playlist;
+using SoundCloudExplode.Tracks;
 using SoundCloudExplode.Utils.Extensions;
 
-namespace SoundCloudExplode.Track;
+namespace SoundCloudExplode.Playlists;
 
 /// <summary>
 /// Operations related to Soundcloud playlist/album.
@@ -70,16 +70,16 @@ public class PlaylistClient
     /// </param>
     /// <param name="cancellationToken"></param>
     /// <exception cref="SoundcloudExplodeException"></exception>
-    public async ValueTask<PlaylistInformation> GetAsync(
+    public async ValueTask<Playlist> GetAsync(
         string url,
         bool autoPopulateAllTracks = true,
         CancellationToken cancellationToken = default)
     {
-        if (!await IsUrlValidAsync(url))
+        if (!await IsUrlValidAsync(url, cancellationToken))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
         var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
-        var playlist = JsonSerializer.Deserialize<PlaylistInformation>(resolvedJson)!;
+        var playlist = JsonSerializer.Deserialize<Playlist>(resolvedJson)!;
 
         if (autoPopulateAllTracks)
         {
@@ -96,13 +96,13 @@ public class PlaylistClient
     /// <summary>
     /// Gets tracks included in the specified playlist url.
     /// </summary>
-    public async ValueTask<List<TrackInformation>> GetTracksAsync(
+    public async ValueTask<List<Track>> GetTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default)
     {
-        if (!await IsUrlValidAsync(url))
+        if (!await IsUrlValidAsync(url, cancellationToken))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
         var playlist = await GetAsync(url, false, cancellationToken);
@@ -117,7 +117,7 @@ public class PlaylistClient
         if (offset > 0)
             playlist.Tracks = playlist.Tracks.Skip(offset).ToArray();
 
-        var list = new List<TrackInformation>();
+        var list = new List<Track>();
 
         //Soundcloud single request limit is 50
         foreach (var chunk in playlist.Tracks.ChunkBy(50))
@@ -131,7 +131,7 @@ public class PlaylistClient
                 cancellationToken
             );
 
-            var tracks = JsonSerializer.Deserialize<List<TrackInformation>>(response)!;
+            var tracks = JsonSerializer.Deserialize<List<Track>>(response)!;
             foreach (var track in tracks)
                 track.PlaylistName = playlist.Title;
 

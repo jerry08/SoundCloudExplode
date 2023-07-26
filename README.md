@@ -72,7 +72,6 @@ To get the tracks included in a playlist, call `Playlists.GetTracksAsync(...)`:
 
 ```csharp
 using SoundCloudExplode;
-using SoundCloudExplode.Common;
 
 var soundcloud = new SoundCloudClient();
 
@@ -170,5 +169,3 @@ var downloadUrl = await soundcloud.Tracks.GetDownloadUrlAsync(
     track
 );
 ```
-
-**This project was inspired by [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode).**

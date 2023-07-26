@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace SoundCloudExplode.Utils.Extensions;
 
@@ -12,6 +12,6 @@ public static class EnumerableExtensions
         return source
             .Select((x, i) => new { Index = i, Value = x })
             .GroupBy(x => x.Index / chunkSize)
-            .Select(x => x.Select(v => v.Value).ToList());
+            .Select(x => x.Select(v => v.Value));
     }
 }
