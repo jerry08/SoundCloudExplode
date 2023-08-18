@@ -116,6 +116,26 @@ public class SearchClient
     }
 
     /// <summary>
+    /// Enumerates batches of search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<Batch<ISearchResult>> GetResultBatchesAsync(
+        string searchQuery,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
+        CancellationToken cancellationToken = default) =>
+        GetResultBatchesAsync(searchQuery, SearchFilter.None, offset, limit, cancellationToken);
+
+    /// <summary>
+    /// Enumerates search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<ISearchResult> GetResultsAsync(
+        string searchQuery,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
+        CancellationToken cancellationToken = default) =>
+        GetResultBatchesAsync(searchQuery, offset, limit, cancellationToken).FlattenAsync();
+
+    /// <summary>
     /// Enumerates playlist search results returned by the specified query.
     /// </summary>
     public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsAsync(
