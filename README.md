@@ -49,15 +49,15 @@ using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
 
-//Get playlist info with all tracks
+// Get a playlist basic information
 var playlist = await soundcloud.Playlists.GetAsync(
     "https://soundcloud.com/tommy-enjoy/sets/aimer"
 );
 
-//Or Get only the playlist basic info without loading all tracks info
+// Or get playlist and load all related tracks at the same time
 var playlist = await soundcloud.Playlists.GetAsync(
     "https://soundcloud.com/tommy-enjoy/sets/aimer",
-    false
+    true
 );
 
 var title = playlist.Title;
@@ -72,44 +72,75 @@ To get the tracks included in a playlist, call `Playlists.GetTracksAsync(...)`:
 
 ```csharp
 using SoundCloudExplode;
+using SoundCloudExplode.Common;
 
 var soundcloud = new SoundCloudClient();
+var playlistUrl = "https://soundcloud.com/tommy-enjoy/sets/aimer";
 
-// Get all tracks in a playlist
-var tracks = await soundcloud.Playlists.GetTracksAsync(
-    "https://soundcloud.com/tommy-enjoy/sets/aimer"
-);
+// Get all playlist tracks
+var tracks = await soundcloud.Playlists.GetTracksAsync(playlistUrl);
 
 // Get only the first 20 playlist tracks
-var tracksSubset = await soundcloud.Playlists
-    .GetTracksAsync(
-        "https://soundcloud.com/tommy-enjoy/sets/aimer",
-        limit: 20
-    );
+var tracksSubset = await soundcloud.Playlists.GetTracksAsync(playlistUrl).CollectAsync(20);
 
-//Setting offset
-var tracksSubset = await soundcloud.Playlists
-    .GetTracksAsync(
-        "https://soundcloud.com/tommy-enjoy/sets/aimer",
-        offset: 10,
-        limit: 5
-    );
+// Get only the first 20 playlist tracks (by setting a limit)
+var tracksSubset = await soundcloud.Playlists.GetTracksAsync(playlistUrl, limit: 20);
+
+// Setting offset
+var tracksSubset = await soundcloud.Playlists.GetTracksAsync(
+    playlistUrl,
+    offset: 10,
+    limit: 5
+);
+```
+
+You can also enumerate the tracks iteratively without waiting for the whole list to load:
+
+```csharp
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+var playlistUrl = "https://soundcloud.com/tommy-enjoy/sets/aimer";
+
+await foreach (var track in soundcloud.Playlists.GetTracksAsync(playlistUrl))
+{
+    var title = track.Title;
+    var duration = track.Duration;
+}
+```
+
+If you need precise control over how many requests you send to SoundCloud, use `Playlists.GetTrackBatchesAsync(...)` which returns tracks wrapped in batches:
+
+```csharp
+using SoundCloudExplode;
+
+var soundcloud = new SoundCloudClient();
+var playlistUrl = "https://soundcloud.com/tommy-enjoy/sets/aimer";
+
+// Each batch corresponds to one request
+await foreach (var batch in soundcloud.Playlists.GetTrackBatchesAsync(playlistUrl))
+{
+    foreach (var track in batch.Items)
+    {
+        var title = track.Title;
+        var duration = track.Duration;
+    }
+}
 ```
 
 ### Albums
 **Note:** Use the same method as retrieving playlists to get albums because they are the same. 
 
 ### Searching
-You can execute a search query and get its results by calling Search.GetResultsAsync(...). Each result may represent either a track, a playlist, an album, or a user, so you need to apply pattern matching to handle the corresponding cases:
+You can execute a search query and get its results by calling `Search.GetResultsAsync(...)`. Each result may represent either a track, a playlist, an album, or a user, so you need to apply pattern matching to handle the corresponding cases:
 
 ```csharp
 using SoundCloudExplode;
+using SoundCloudExplode.Common;
 
 var soundcloud = new SoundCloudClient();
 
-var results = await soundcloud.Search.GetResultsAsync("banda neira");
-
-foreach (var result in results)
+await foreach (var result in soundcloud.Search.GetResultsAsync("banda neira"))
 {
     // Use pattern matching to handle different results (tracks, playlists, users)
     switch (result)
@@ -121,7 +152,7 @@ foreach (var result in results)
                 var duration = track.Duration;
                 break;
             }
-        //NOTE: Soundcloud handles playlist and albums the same way.
+        // NOTE: Soundcloud handles playlist and albums the same way.
         case PlaylistSearchResult playlist:
             {
                 var id = playlist.Id;
@@ -138,6 +169,19 @@ foreach (var result in results)
             }
     }
 }
+```
+
+To limit the results to a specific type, use `Search.GetTracksAsync(...)`, `Search.GetPlaylistsAsync(...)`, or `Search.GetUsersAsync(...)`
+
+```csharp
+using SoundCloudExplode;
+using SoundCloudExplode.Common;
+
+var soundcloud = new SoundCloudClient();
+
+var tracks = await soundcloud.Search.GetTracksAsync("banda neira");
+var playlists = await soundcloud.Search.GetPlaylistsAsync("banda neira");
+var users = await soundcloud.Search.GetUsersAsync("banda neira");
 ```
 
 #### Downloading tracks
@@ -165,7 +209,5 @@ var soundcloud = new SoundCloudClient();
 
 var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
-var downloadUrl = await soundcloud.Tracks.GetDownloadUrlAsync(
-    track
-);
+var downloadUrl = await soundcloud.Tracks.GetDownloadUrlAsync(track);
 ```
