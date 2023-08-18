@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using SoundCloudExplode.Demo.Cli.Utils;
+using SoundCloudExplode.Common;
 using Spectre.Console;
 
 namespace SoundCloudExplode.Demo.Cli;
