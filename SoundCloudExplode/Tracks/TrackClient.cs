@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Exceptions;
-using SoundCloudExplode.Users;
 using SoundCloudExplode.Utils.Extensions;
 
 namespace SoundCloudExplode.Tracks;
@@ -36,9 +33,9 @@ public class TrackClient
     }
 
     /// <summary>
-    /// Checks for valid track(s) url
+    /// Checks for valid track(s) url.
     /// </summary>
-    /// <exception cref="SoundcloudExplodeException"></exception>
+    /// <exception cref="SoundcloudExplodeException"/>
     public async Task<bool> IsUrlValidAsync(
         string url,
         CancellationToken cancellationToken = default)
@@ -63,6 +60,7 @@ public class TrackClient
     /// <summary>
     /// Gets the metadata associated with the specified track.
     /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
     public async ValueTask<Track?> GetAsync(
         string url,
         CancellationToken cancellationToken = default)
@@ -78,6 +76,7 @@ public class TrackClient
     /// <summary>
     /// Gets the metadata associated with the specified track.
     /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
     public async ValueTask<string?> GetUrlByIdAsync(
         long trackId,
         CancellationToken cancellationToken = default)
@@ -93,77 +92,13 @@ public class TrackClient
     /// <summary>
     /// Gets the metadata associated with the specified track.
     /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
     public async ValueTask<Track?> GetByIdAsync(
         long trackId,
         CancellationToken cancellationToken = default)
     {
         var trackUrl = await GetUrlByIdAsync(trackId, cancellationToken);
         return trackUrl is null ? null : await GetAsync(trackUrl, cancellationToken);
-    }
-
-    /// <summary>
-    /// Gets batches of tracks included in the specified url.
-    /// </summary>
-    public async ValueTask<List<Track>> GetTracksAsync(
-        string url,
-        CancellationToken cancellationToken = default)
-    {
-        if (!await IsUrlValidAsync(url, cancellationToken))
-            throw new SoundcloudExplodeException("Invalid track url");
-
-        var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
-
-        if (!TracksRegex.IsMatch(url))
-        {
-            var tracks = new List<Track>
-            {
-                JsonSerializer.Deserialize<Track>(resolvedJson)!
-            };
-
-            return tracks;
-        }
-
-        var user = JsonSerializer.Deserialize<User>(resolvedJson);
-
-        var next_href = default(string?);
-
-        var tracks2 = new List<Track>();
-
-        while (true)
-        {
-            var tracks = new List<Track>();
-
-            if (user is null)
-            {
-                break;
-            }
-
-            //url = $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?offset=2014-08-15T00&limit=20&representation=&client_id=eLWKwhCY4BrKxcpiyhjyr6SeHiszzUq6&app_locale=en";
-            url = next_href ?? $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?limit=200&client_id={_endpoint.ClientId}";
-
-            var tracksJson = await _http.ExecuteGetAsync(url, cancellationToken);
-            var tracksJObj = JsonNode.Parse(tracksJson);
-            var collToken = tracksJObj?["collection"]?.ToString();
-
-            if (collToken is not null
-                && JsonSerializer.Deserialize<List<Track>>(collToken)
-                    is List<Track> list)
-            {
-                tracks.AddRange(list);
-            }
-
-            if (!tracks.Any())
-                break;
-
-            next_href = tracksJObj?["next_href"]?.ToString();
-
-            if (string.IsNullOrEmpty(next_href))
-                break;
-
-            next_href += $"&client_id={_endpoint.ClientId}";
-        }
-
-        return tracks2;
     }
 
     private async ValueTask<string?> QueryTrackMp3Async(
@@ -192,8 +127,9 @@ public class TrackClient
     }
 
     /// <summary>
-    /// Gets the download url from a track
+    /// Gets the download url from a track's url.
     /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
     public async ValueTask<string?> GetDownloadUrlAsync(
         string url,
         CancellationToken cancellationToken = default)
@@ -206,8 +142,9 @@ public class TrackClient
     }
 
     /// <summary>
-    /// Gets the download url from a track
+    /// Gets the download url from a track.
     /// </summary>
+    /// <exception cref="TrackUnavailableException"/>
     public async ValueTask<string?> GetDownloadUrlAsync(
         Track track,
         CancellationToken cancellationToken = default)
@@ -241,7 +178,8 @@ public class TrackClient
 
         var trackMedia = await _http.ExecuteGetAsync(trackUrl, cancellationToken);
 
-        var trackMediaUrl = JsonNode.Parse(trackMedia)?["url"]?.ToString();
+        var trackMediaUrl = JsonDocument.Parse(trackMedia)
+            .RootElement.GetProperty("url").GetString();
 
         return trackMediaUrl?.Contains(".m3u8") == true
             ? await QueryTrackMp3Async(trackMediaUrl, cancellationToken)

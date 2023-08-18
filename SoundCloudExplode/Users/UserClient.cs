@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
+using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Playlists;
 using SoundCloudExplode.Tracks;
@@ -25,19 +27,17 @@ public class UserClient
     /// <summary>
     /// Initializes an instance of <see cref="UserClient"/>.
     /// </summary>
-    public UserClient(
-        HttpClient http,
-        SoundcloudEndpoint endpoint)
+    public UserClient(HttpClient http, SoundcloudEndpoint endpoint)
     {
         _http = http;
         _endpoint = endpoint;
     }
 
     /// <summary>
-    /// Checks for valid user url
+    /// Checks for valid user url.
     /// </summary>
     /// <param name="url"></param>
-    /// <exception cref="SoundcloudExplodeException"></exception>
+    /// <exception cref="SoundcloudExplodeException"/>
     public bool IsUrlValid(string url)
     {
         url = url.ToLower();
@@ -54,9 +54,7 @@ public class UserClient
     /// <summary>
     /// Gets the metadata associated with the specified user.
     /// </summary>
-    /// <param name="url"></param>
-    /// <param name="cancellationToken"></param>
-    /// <exception cref="SoundcloudExplodeException"></exception>
+    /// <exception cref="SoundcloudExplodeException"/>
     public async ValueTask<User> GetAsync(
         string url,
         CancellationToken cancellationToken = default)
@@ -71,92 +69,201 @@ public class UserClient
     /// <summary>
     /// Gets tracks included in the specified user url.
     /// </summary>
-    public async ValueTask<List<Track>> GetTracksAsync(
+    /// <exception cref="SoundcloudExplodeException"/>
+    public async IAsyncEnumerable<Batch<Track>> GetTrackBatchesAsync(
         string url,
+        UserTrackSortBy trackQuery,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
 
         var user = await GetAsync(url, cancellationToken);
 
-        var response = await _http.ExecuteGetAsync(
-            $"https://api-v2.soundcloud.com/users/{user.Id}/toptracks?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
-            cancellationToken);
+        if (user is null)
+            yield break;
 
-        var data = JsonNode.Parse(response)!["collection"]!.ToString();
+        var queryPart = trackQuery switch
+        {
+            UserTrackSortBy.Popular => "toptracks",
+            _ => "tracks"
+        };
 
-        return JsonSerializer.Deserialize<List<Track>>(data)!;
+        var nextUrl = default(string?);
+
+        while (true)
+        {
+            url = nextUrl ?? $"https://api-v2.soundcloud.com/users/{user.Id}/{queryPart}?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}";
+
+            var response = await _http.ExecuteGetAsync(url, cancellationToken);
+
+            var doc = JsonDocument.Parse(response).RootElement;
+            var collectionStr = doc.GetProperty("collection").ToString();
+
+            if (string.IsNullOrEmpty(collectionStr))
+                break;
+
+            if (JsonSerializer.Deserialize<List<Track>>(collectionStr)
+                is not List<Track> list
+                || !list.Any())
+            {
+                break;
+            }
+
+            yield return Batch.Create(list);
+
+            nextUrl = doc.GetProperty("next_href").GetString();
+
+            if (string.IsNullOrEmpty(nextUrl))
+                break;
+
+            nextUrl += $"&client_id={_endpoint.ClientId}";
+        }
     }
 
     /// <summary>
-    /// Gets popular tracks included in the specified user url.
+    /// Enumerates track results returned by the specified user url.
     /// </summary>
-    public async ValueTask<List<Track>> GetPopularTracksAsync(
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Track> GetTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        GetTrackBatchesAsync(url, UserTrackSortBy.Default, offset, limit, cancellationToken).FlattenAsync();
+
+    /// <summary>
+    /// Enumerates popular track results returned by the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Track> GetPopularTracksAsync(
+        string url,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
+        CancellationToken cancellationToken = default) =>
+        GetTrackBatchesAsync(url, UserTrackSortBy.Popular, offset, limit, cancellationToken).FlattenAsync();
+
+    /// <summary>
+    /// Gets tracks included in the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public async IAsyncEnumerable<Batch<Playlist>> GetPlaylistBatchesAsync(
+        string url,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
 
         var user = await GetAsync(url, cancellationToken);
 
-        var response = await _http.ExecuteGetAsync(
-            $"https://api-v2.soundcloud.com/users/{user.Id}/tracks?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
-            cancellationToken);
+        if (user is null)
+            yield break;
 
-        var data = JsonNode.Parse(response)!["collection"]!.ToString();
+        var nextUrl = default(string?);
 
-        return JsonSerializer.Deserialize<List<Track>>(data)!;
+        while (true)
+        {
+            url = nextUrl ?? $"https://api-v2.soundcloud.com/users/{user.Id}/playlists?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}";
+
+            var response = await _http.ExecuteGetAsync(url, cancellationToken);
+
+            var doc = JsonDocument.Parse(response).RootElement;
+            var collectionStr = doc.GetProperty("collection").ToString();
+
+            if (string.IsNullOrEmpty(collectionStr))
+                break;
+
+            if (JsonSerializer.Deserialize<List<Playlist>>(collectionStr)
+                is not List<Playlist> list
+                || !list.Any())
+            {
+                break;
+            }
+
+            yield return Batch.Create(list);
+
+            nextUrl = doc.GetProperty("next_href").GetString();
+
+            if (string.IsNullOrEmpty(nextUrl))
+                break;
+
+            nextUrl += $"&client_id={_endpoint.ClientId}";
+        }
     }
 
     /// <summary>
-    /// Gets playlists of tracks included in the specified user url.
+    /// Enumerates playlist results returned by the specified user url.
     /// </summary>
-    public async ValueTask<List<Playlist>> GetPlaylistsAsync(
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Playlist> GetPlaylistsAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        GetPlaylistBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
+
+    /// <summary>
+    /// Gets tracks included in the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public async IAsyncEnumerable<Batch<Playlist>> GetAlbumBatchesAsync(
+        string url,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
 
         var user = await GetAsync(url, cancellationToken);
 
-        var response = await _http.ExecuteGetAsync(
-            $"https://api-v2.soundcloud.com/users/{user.Id}/playlists?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
-            cancellationToken);
+        if (user is null)
+            yield break;
 
-        var data = JsonNode.Parse(response)!["collection"]!.ToString();
+        var nextUrl = default(string?);
 
-        return JsonSerializer.Deserialize<List<Playlist>>(data)!;
+        while (true)
+        {
+            url = nextUrl ?? $"https://api-v2.soundcloud.com/users/{user.Id}/albums?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}";
+
+            var response = await _http.ExecuteGetAsync(url, cancellationToken);
+
+            var doc = JsonDocument.Parse(response).RootElement;
+            var collectionStr = doc.GetProperty("collection").ToString();
+
+            if (string.IsNullOrEmpty(collectionStr))
+                break;
+
+            if (JsonSerializer.Deserialize<List<Playlist>>(collectionStr)
+                is not List<Playlist> list
+                || !list.Any())
+            {
+                break;
+            }
+
+            yield return Batch.Create(list);
+
+            nextUrl = doc.GetProperty("next_href").GetString();
+
+            if (string.IsNullOrEmpty(nextUrl))
+                break;
+
+            nextUrl += $"&client_id={_endpoint.ClientId}";
+        }
     }
 
     /// <summary>
-    /// Gets albums included in the specified user url.
+    /// Enumerates album results returned by the specified user url.
     /// </summary>
-    public async ValueTask<List<Playlist>> GetAlbumsAsync(
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Playlist> GetAlbumsAsync(
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default)
-    {
-        if (limit is < Constants.MinLimit or > Constants.MaxLimit)
-            throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
-
-        var user = await GetAsync(url, cancellationToken);
-
-        var response = await _http.ExecuteGetAsync(
-            $"https://api-v2.soundcloud.com/users/{user.Id}/albums?offset={offset}&limit={limit}&client_id={_endpoint.ClientId}",
-            cancellationToken);
-
-        var data = JsonNode.Parse(response)!["collection"]!.ToString();
-
-        return JsonSerializer.Deserialize<List<Playlist>>(data)!;
-    }
+        CancellationToken cancellationToken = default) =>
+        GetAlbumBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
 }
