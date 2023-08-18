@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Playlists;
 using SoundCloudExplode.Search;
@@ -23,11 +22,6 @@ namespace SoundCloudExplode;
 public class SoundCloudClient
 {
     internal string ClientId { get; private set; }
-
-    //private readonly Regex PlaylistRegex = new (@"soundcloud\..+?/(.*?)\/sets\/.+");
-    //private readonly Regex TrackRegex = new (@"soundcloud\..+?/(.*?)\/sets\/.+");
-    private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/[a-zA-Z]+");
-    private readonly Regex TrackRegex = new(@"soundcloud\..+?\/(.*?)\/[a-zA-Z0-9~@#$^*()_+=[\]{}|\\,.?: -]+");
 
     private readonly HttpClient _http;
     private readonly SoundcloudEndpoint _endpoint;
@@ -110,17 +104,21 @@ public class SoundCloudClient
     public async Task<string> GetClientIdAsync(CancellationToken cancellationToken = default)
     {
         var response = await _http.ExecuteGetAsync(BaseUrl, cancellationToken);
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
 
-        var script = document.DocumentNode.Descendants()
-            .Where(x => x.Name == "script").ToList();
+        var scripts = Regex.Matches(response, "<script.*?src=\"(.*?)\"");
 
-        var script_url = script.Last().Attributes["src"].Value;
+#if NETCOREAPP || NETSTANDARD2_1_OR_GREATER
+        var scriptUrl = scripts.LastOrDefault()?.Groups[1].Value;
+#else
+        var scriptUrl = scripts.Cast<Match>().LastOrDefault()?.Groups[1].Value;
+#endif
 
-        response = await _http.ExecuteGetAsync(script_url, cancellationToken);
+        if (string.IsNullOrEmpty(scriptUrl))
+            return string.Empty;
 
-        return response.Split(new string[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
+        response = await _http.ExecuteGetAsync(scriptUrl!, cancellationToken);
+
+        return response.Split(new[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
     }
 
     /// <summary>
