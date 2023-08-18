@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using SoundCloudExplode.Common;
 
 namespace SoundCloudExplode.Users;
 
-public class User
+public class User : IBatchItem
 {
     [JsonPropertyName("avatar_url")]
     public Uri? AvatarUrl { get; set; }
@@ -52,13 +54,8 @@ public class User
 
     [JsonPropertyName("badges")]
     public Badges? Badges { get; set; }
-}
 
-public class Badges
-{
-    [JsonPropertyName("pro_unlimited")]
-    public bool ProUnlimited { get; set; }
-
-    [JsonPropertyName("verified")]
-    public bool Verified { get; set; }
+    /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
+    public override string ToString() => $"User ({FullName})";
 }

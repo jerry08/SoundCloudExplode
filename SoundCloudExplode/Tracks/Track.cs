@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using SoundCloudExplode.Common;
 using SoundCloudExplode.Users;
 
 namespace SoundCloudExplode.Tracks;
 
-public class Track
+public class Track : IBatchItem
 {
     [JsonPropertyName("artwork_url")]
     public Uri? ArtworkUrl { get; set; }
@@ -142,55 +144,8 @@ public class Track
     /// Name of playlist/album
     /// </summary>
     public string? PlaylistName { get; set; }
-}
 
-public class Media
-{
-    [JsonPropertyName("transcodings")]
-    public Transcoding[]? Transcodings { get; set; }
-}
-
-public class Transcoding
-{
-    [JsonPropertyName("url")]
-    public Uri? Url { get; set; }
-
-    [JsonPropertyName("preset")]
-    public string? Preset { get; set; }
-
-    [JsonPropertyName("duration")]
-    public long? Duration { get; set; }
-
-    [JsonPropertyName("snipped")]
-    public bool Snipped { get; set; }
-
-    [JsonPropertyName("format")]
-    public Format? Format { get; set; }
-
-    [JsonPropertyName("quality")]
-    public string? Quality { get; set; }
-}
-
-public class Format
-{
-    [JsonPropertyName("protocol")]
-    public string? Protocol { get; set; }
-
-    [JsonPropertyName("mime_type")]
-    public string? MimeType { get; set; }
-}
-
-public class PublisherMetadata
-{
-    [JsonPropertyName("id")]
-    public long? Id { get; set; }
-
-    [JsonPropertyName("urn")]
-    public string? Urn { get; set; }
-
-    [JsonPropertyName("artist")]
-    public string? Artist { get; set; }
-
-    [JsonPropertyName("contains_music")]
-    public bool ContainsMusic { get; set; }
+    /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
+    public override string ToString() => $"Track ({Title})";
 }

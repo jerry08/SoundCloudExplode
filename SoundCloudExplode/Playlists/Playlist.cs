@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using SoundCloudExplode.Common;
 using SoundCloudExplode.Tracks;
 using SoundCloudExplode.Users;
 
 namespace SoundCloudExplode.Playlists;
 
-public class Playlist
+public class Playlist : IBatchItem
 {
     [JsonPropertyName("artwork_url")]
     public Uri? ArtworkUrl { get; set; }
@@ -105,82 +107,8 @@ public class Playlist
 
     [JsonPropertyName("track_count")]
     public long? TrackCount { get; set; }
-}
 
-public class Media
-{
-    [JsonPropertyName("transcodings")]
-    public Transcoding[]? Transcodings { get; set; }
-}
-
-public class CreatorSubscription
-{
-    [JsonPropertyName("product")]
-    public Product? Product { get; set; }
-}
-
-public class Product
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-}
-
-public class Visuals
-{
-    [JsonPropertyName("urn")]
-    public string? Urn { get; set; }
-
-    [JsonPropertyName("enabled")]
-    public bool Enabled { get; set; }
-
-    [JsonPropertyName("visuals")]
-    public Visual[]? Items { get; set; }
-
-    [JsonPropertyName("tracking")]
-    public object? Tracking { get; set; }
-}
-
-public class Visual
-{
-    [JsonPropertyName("urn")]
-    public string? Urn { get; set; }
-
-    [JsonPropertyName("entry_time")]
-    public long? EntryTime { get; set; }
-
-    [JsonPropertyName("visual_url")]
-    public Uri? VisualUrl { get; set; }
-}
-
-public enum Kind
-{
-    Track
-}
-
-public enum MimeType
-{
-    AudioMpeg,
-    AudioOggCodecsOpus
-}
-
-public enum Protocol
-{
-    Hls,
-    Progressive
-}
-
-public enum Preset
-{
-    Mp30_0,
-    Opus0_0
-}
-
-public enum Quality
-{
-    Sq
-}
-
-public enum MonetizationModel
-{
-    Blackbox
+    /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
+    public override string ToString() => $"Playlist/Album ({Title})";
 }
