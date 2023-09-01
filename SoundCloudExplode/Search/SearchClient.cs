@@ -53,6 +53,7 @@ public class SearchClient
         if (limit is < Constants.MinLimit or > Constants.MaxLimit)
             throw new SoundcloudExplodeException($"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}");
 
+        var encounteredUrls = new HashSet<string>(StringComparer.Ordinal);
         var continuationOffset = offset;
 
         var results = new List<ISearchResult>();
@@ -69,6 +70,8 @@ public class SearchClient
 
         while(true)
         {
+            results.Clear();
+
             // Any result
             var url = $"https://api-v2.soundcloud.com/search{searchFilterStr}?q={Uri.EscapeDataString(searchQuery)}&client_id={_endpoint.ClientId}&limit={limit}&offset={continuationOffset}";
 
@@ -80,6 +83,10 @@ public class SearchClient
             {
                 var permalinkUrl = item.GetProperty("permalink_url").ToString();
                 if (permalinkUrl is null || !Uri.IsWellFormedUriString(permalinkUrl, UriKind.Absolute))
+                    continue;
+
+                // Don't yield the same result twice
+                if (!encounteredUrls.Add(permalinkUrl))
                     continue;
 
                 var permalinkUri = new Uri(permalinkUrl);
@@ -109,6 +116,9 @@ public class SearchClient
                 }
             }
 
+            if (results.Count == 0)
+                break;
+
             yield return Batch.Create(results);
 
             continuationOffset += results.Count;
@@ -126,6 +136,14 @@ public class SearchClient
         GetResultBatchesAsync(searchQuery, SearchFilter.None, offset, limit, cancellationToken);
 
     /// <summary>
+    /// Enumerates batches of search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<Batch<ISearchResult>> GetResultBatchesAsync(
+        string searchQuery,
+        CancellationToken cancellationToken) =>
+        GetResultBatchesAsync(searchQuery, SearchFilter.None, cancellationToken: cancellationToken);
+
+    /// <summary>
     /// Enumerates search results returned by the specified query.
     /// </summary>
     public IAsyncEnumerable<ISearchResult> GetResultsAsync(
@@ -136,6 +154,14 @@ public class SearchClient
         GetResultBatchesAsync(searchQuery, offset, limit, cancellationToken).FlattenAsync();
 
     /// <summary>
+    /// Enumerates search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<ISearchResult> GetResultsAsync(
+        string searchQuery,
+        CancellationToken cancellationToken) =>
+        GetResultBatchesAsync(searchQuery, cancellationToken).FlattenAsync();
+
+    /// <summary>
     /// Enumerates playlist search results returned by the specified query.
     /// </summary>
     public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsAsync(
@@ -144,6 +170,16 @@ public class SearchClient
         int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default) =>
         GetResultBatchesAsync(searchQuery, SearchFilter.Playlist, offset, limit, cancellationToken)
+            .FlattenAsync()
+            .OfTypeAsync<PlaylistSearchResult>();
+
+    /// <summary>
+    /// Enumerates playlist search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsAsync(
+        string searchQuery,
+        CancellationToken cancellationToken) =>
+        GetResultBatchesAsync(searchQuery, SearchFilter.Playlist, cancellationToken: cancellationToken)
             .FlattenAsync()
             .OfTypeAsync<PlaylistSearchResult>();
 
@@ -160,6 +196,16 @@ public class SearchClient
             .OfTypeAsync<PlaylistSearchResult>();
 
     /// <summary>
+    /// Enumerates playlists without albums search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsWithoutAlbumsAsync(
+        string searchQuery,
+        CancellationToken cancellationToken) =>
+        GetResultBatchesAsync(searchQuery, SearchFilter.PlaylistWithoutAlbums, cancellationToken: cancellationToken)
+            .FlattenAsync()
+            .OfTypeAsync<PlaylistSearchResult>();
+
+    /// <summary>
     /// Enumerates track search results returned by the specified query.
     /// </summary>
     public IAsyncEnumerable<TrackSearchResult> GetTracksAsync(
@@ -168,6 +214,16 @@ public class SearchClient
         int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default) =>
         GetResultBatchesAsync(searchQuery, SearchFilter.Track, offset, limit, cancellationToken)
+            .FlattenAsync()
+            .OfTypeAsync<TrackSearchResult>();
+
+    /// <summary>
+    /// Enumerates track search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<TrackSearchResult> GetTracksAsync(
+        string searchQuery,
+        CancellationToken cancellationToken) =>
+        GetResultBatchesAsync(searchQuery, SearchFilter.Track, cancellationToken: cancellationToken)
             .FlattenAsync()
             .OfTypeAsync<TrackSearchResult>();
 
@@ -184,6 +240,16 @@ public class SearchClient
             .OfTypeAsync<UserSearchResult>();
 
     /// <summary>
+    /// Enumerates user search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<UserSearchResult> GetUsersAsync(
+        string searchQuery,
+        CancellationToken cancellationToken) =>
+        GetResultBatchesAsync(searchQuery, SearchFilter.User, cancellationToken: cancellationToken)
+            .FlattenAsync()
+            .OfTypeAsync<UserSearchResult>();
+
+    /// <summary>
     /// Enumerates album search results returned by the specified query.
     /// </summary>
     public IAsyncEnumerable<PlaylistSearchResult> GetAlbumsAsync(
@@ -192,6 +258,16 @@ public class SearchClient
         int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default) =>
         GetResultBatchesAsync(searchQuery, SearchFilter.Album, offset, limit, cancellationToken)
+            .FlattenAsync()
+            .OfTypeAsync<PlaylistSearchResult>();
+
+    /// <summary>
+    /// Enumerates album search results returned by the specified query.
+    /// </summary>
+    public IAsyncEnumerable<PlaylistSearchResult> GetAlbumsAsync(
+        string searchQuery,
+        CancellationToken cancellationToken) =>
+        GetResultBatchesAsync(searchQuery, SearchFilter.Album, cancellationToken: cancellationToken)
             .FlattenAsync()
             .OfTypeAsync<PlaylistSearchResult>();
 }
