@@ -156,7 +156,7 @@ public class TrackClient
 
         if (track.Media is null
             || track.Media.Transcodings is null
-            || track.Media.Transcodings.Length == 0)
+            || track.Media.Transcodings.Count == 0)
         {
             throw new TrackUnavailableException("No transcodings found");
         }

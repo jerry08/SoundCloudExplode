@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using SoundCloudExplode.Playlists;
 
@@ -22,7 +23,7 @@ public class PlaylistUser
     public DateTimeOffset? CreatedAt { get; set; }
 
     [JsonPropertyName("creator_subscriptions")]
-    public CreatorSubscription[]? CreatorSubscriptions { get; set; }
+    public List<CreatorSubscription> CreatorSubscriptions { get; set; } = new();
 
     [JsonPropertyName("creator_subscription")]
     public CreatorSubscription? CreatorSubscription { get; set; }

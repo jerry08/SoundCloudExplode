@@ -86,7 +86,7 @@ public class PlaylistClient
         if (populateAllTracks)
         {
             var tracks = await GetTracksAsync(url, cancellationToken: cancellationToken);
-            playlist.Tracks = tracks.ToArray();
+            playlist.Tracks = tracks.ToList();
 
             foreach (var track in playlist.Tracks)
                 track.PlaylistName = playlist.Title;
@@ -113,7 +113,7 @@ public class PlaylistClient
             yield break;
 
         if (offset > 0)
-            playlist.Tracks = playlist.Tracks.Skip(offset).ToArray();
+            playlist.Tracks = playlist.Tracks.Skip(offset).ToList();
 
         // Soundcloud single request limit is 50
         foreach (var chunk in playlist.Tracks.ChunkBy(50))

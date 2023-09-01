@@ -1,9 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace SoundCloudExplode.Tracks;
 
 public class Media
 {
     [JsonPropertyName("transcodings")]
-    public Transcoding[]? Transcodings { get; set; }
+    public List<Transcoding> Transcodings { get; set; } = new();
 }

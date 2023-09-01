@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using SoundCloudExplode.Common;
@@ -103,7 +104,7 @@ public class Playlist : IBatchItem
     public PlaylistUser? User { get; set; }
 
     [JsonPropertyName("tracks")]
-    public Track[]? Tracks { get; set; }
+    public List<Track> Tracks { get; set; } = new();
 
     [JsonPropertyName("track_count")]
     public long? TrackCount { get; set; }
