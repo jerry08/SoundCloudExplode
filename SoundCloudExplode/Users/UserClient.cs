@@ -135,6 +135,15 @@ public class UserClient
         GetTrackBatchesAsync(url, UserTrackSortBy.Default, offset, limit, cancellationToken).FlattenAsync();
 
     /// <summary>
+    /// Enumerates track results returned by the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Track> GetTracksAsync(
+        string url,
+        CancellationToken cancellationToken) =>
+        GetTrackBatchesAsync(url, UserTrackSortBy.Default, cancellationToken: cancellationToken).FlattenAsync();
+
+    /// <summary>
     /// Enumerates popular track results returned by the specified user url.
     /// </summary>
     /// <exception cref="SoundcloudExplodeException"/>
@@ -144,6 +153,15 @@ public class UserClient
         int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default) =>
         GetTrackBatchesAsync(url, UserTrackSortBy.Popular, offset, limit, cancellationToken).FlattenAsync();
+
+    /// <summary>
+    /// Enumerates popular track results returned by the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Track> GetPopularTracksAsync(
+        string url,
+        CancellationToken cancellationToken) =>
+        GetTrackBatchesAsync(url, UserTrackSortBy.Popular, cancellationToken: cancellationToken).FlattenAsync();
 
     /// <summary>
     /// Gets tracks included in the specified user url.
@@ -207,6 +225,15 @@ public class UserClient
         GetPlaylistBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
 
     /// <summary>
+    /// Enumerates playlist results returned by the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Playlist> GetPlaylistsAsync(
+        string url,
+        CancellationToken cancellationToken) =>
+        GetPlaylistBatchesAsync(url, cancellationToken: cancellationToken).FlattenAsync();
+
+    /// <summary>
     /// Gets tracks included in the specified user url.
     /// </summary>
     /// <exception cref="SoundcloudExplodeException"/>
@@ -266,4 +293,13 @@ public class UserClient
         int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default) =>
         GetAlbumBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
+
+    /// <summary>
+    /// Enumerates album results returned by the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Playlist> GetAlbumsAsync(
+        string url,
+        CancellationToken cancellationToken) =>
+        GetAlbumBatchesAsync(url, cancellationToken: cancellationToken).FlattenAsync();
 }

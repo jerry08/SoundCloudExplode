@@ -148,4 +148,13 @@ public class PlaylistClient
         int limit = Constants.DefaultLimit,
         CancellationToken cancellationToken = default) =>
         GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
+
+    /// <summary>
+    /// Enumerates tracks included in the specified playlist url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Track> GetTracksAsync(
+        string url,
+        CancellationToken cancellationToken) =>
+        GetTrackBatchesAsync(url, cancellationToken: cancellationToken).FlattenAsync();
 }
