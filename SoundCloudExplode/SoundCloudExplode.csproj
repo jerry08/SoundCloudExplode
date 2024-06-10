@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net6.0;net5.0;netstandard2.1;netstandard2.0;net461;netcoreapp3.1</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</IsTrimmable>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
   </PropertyGroup>
 
   <!-- NuGet -->
@@ -26,9 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSharpier.MsBuild" Version="0.28.2" PrivateAssets="all" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
-    <PackageReference Include="PolyShim" Version="1.10.0" PrivateAssets="all" />
-    <PackageReference Include="System.Text.Json" Version="7.0.3" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp' or '$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="PolyShim" Version="1.12.0" PrivateAssets="all" />
+    <PackageReference Include="System.Text.Json" Version="8.0.3" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp' or '$(TargetFramework)' == 'netcoreapp3.1'" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
