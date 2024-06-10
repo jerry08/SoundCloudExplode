@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using SoundCloudExplode.Demo.Cli.Utils;
 using SoundCloudExplode.Common;
+using SoundCloudExplode.Demo.Cli.Utils;
 using Spectre.Console;
 
 namespace SoundCloudExplode.Demo.Cli;
@@ -37,15 +37,23 @@ internal static class Program
                 {
                     // Download the stream
                     var trackName = PathEx.EscapeFileName(track.Title!);
-                    var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
+                    var trackPath = Path.Join(
+                        Environment.CurrentDirectory,
+                        "Downloads",
+                        $"{trackName}.mp3"
+                    );
 
-                    await AnsiConsole.Progress().StartAsync(async ctx =>
-                    {
-                        var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName.EscapeMarkup()})[/]");
-                        progressTask.MaxValue = 1;
+                    await AnsiConsole
+                        .Progress()
+                        .StartAsync(async ctx =>
+                        {
+                            var progressTask = ctx.AddTask(
+                                $"[cyan]Downloading ({trackName.EscapeMarkup()})[/]"
+                            );
+                            progressTask.MaxValue = 1;
 
-                        await soundcloud.DownloadAsync(track, trackPath, progressTask);
-                    });
+                            await soundcloud.DownloadAsync(track, trackPath, progressTask);
+                        });
 
                     Console.WriteLine("Done");
                     Console.WriteLine($"Track saved to '{trackPath}'");
@@ -62,15 +70,23 @@ internal static class Program
 
                 // Download the stream
                 var trackName = PathEx.EscapeFileName(track.Title!);
-                var trackPath = Path.Join(Environment.CurrentDirectory, "Downloads", $"{trackName}.mp3");
+                var trackPath = Path.Join(
+                    Environment.CurrentDirectory,
+                    "Downloads",
+                    $"{trackName}.mp3"
+                );
 
-                await AnsiConsole.Progress().StartAsync(async ctx =>
-                {
-                    var progressTask = ctx.AddTask($"[cyan]Downloading ({trackName.EscapeMarkup()})[/]");
-                    progressTask.MaxValue = 1;
+                await AnsiConsole
+                    .Progress()
+                    .StartAsync(async ctx =>
+                    {
+                        var progressTask = ctx.AddTask(
+                            $"[cyan]Downloading ({trackName.EscapeMarkup()})[/]"
+                        );
+                        progressTask.MaxValue = 1;
 
-                    await soundcloud.DownloadAsync(track, trackPath, progressTask);
-                });
+                        await soundcloud.DownloadAsync(track, trackPath, progressTask);
+                    });
 
                 Console.WriteLine("Done");
                 Console.WriteLine($"Track saved to '{trackPath}'");

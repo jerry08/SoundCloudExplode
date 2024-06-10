@@ -14,7 +14,8 @@ internal static class StreamExtensions
         long totalLength,
         IProgress<double>? progress = null,
         int bufferSize = 0x1000,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         using var buffer = MemoryPool<byte>.Shared.Rent(bufferSize);
 

@@ -5,12 +5,13 @@ namespace SoundCloudExplode.Utils;
 
 internal static class Http
 {
-    private static readonly Lazy<HttpClient> HttpClientLazy = new(() =>
-    {
-        var handler = new HttpClientHandler();
+    private static readonly Lazy<HttpClient> HttpClientLazy =
+        new(() =>
+        {
+            var handler = new HttpClientHandler();
 
-        return new HttpClient(handler, true);
-    });
+            return new HttpClient(handler, true);
+        });
 
     public static HttpClient Client => HttpClientLazy.Value;
 
@@ -20,8 +21,8 @@ internal static class Http
         int build = Randomizer.Instance.Next(2100, 3538);
         int branchBuild = Randomizer.Instance.Next(170);
 
-        return $"Mozilla/5.0 ({RandomWindowsVersion()}) AppleWebKit/537.36 (KHTML, like Gecko) " +
-            $"Chrome/{major}.0.{build}.{branchBuild} Safari/537.36";
+        return $"Mozilla/5.0 ({RandomWindowsVersion()}) AppleWebKit/537.36 (KHTML, like Gecko) "
+            + $"Chrome/{major}.0.{build}.{branchBuild} Safari/537.36";
     }
 
     private static string RandomWindowsVersion()
@@ -32,15 +33,12 @@ internal static class Http
         // Windows 10 = 45% popularity
         if (random >= 1 && random <= 45)
             windowsVersion += "10.0";
-
         // Windows 7 = 35% popularity
         else if (random > 45 && random <= 80)
             windowsVersion += "6.1";
-
         // Windows 8.1 = 15% popularity
         else if (random > 80 && random <= 95)
             windowsVersion += "6.3";
-
         // Windows 8 = 5% popularity
         else
             windowsVersion += "6.2";

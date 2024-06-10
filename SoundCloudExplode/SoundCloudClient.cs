@@ -56,10 +56,7 @@ public class SoundCloudClient
         ClientId = clientId;
         _http = http;
 
-        _endpoint = new(http)
-        {
-            ClientId = clientId
-        };
+        _endpoint = new(http) { ClientId = clientId };
 
         Search = new(http, _endpoint);
         Tracks = new(http, _endpoint);
@@ -70,29 +67,25 @@ public class SoundCloudClient
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
-    public SoundCloudClient() : this(Constants.ClientId, Http.Client)
-    {
-    }
+    public SoundCloudClient()
+        : this(Constants.ClientId, Http.Client) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
-    public SoundCloudClient(HttpClient http) : this(Constants.ClientId, http)
-    {
-    }
+    public SoundCloudClient(HttpClient http)
+        : this(Constants.ClientId, http) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
-    public SoundCloudClient(string clientId) : this(Http.Client)
-    {
-        ClientId = clientId;
-    }
+    public SoundCloudClient(string clientId)
+        : this(clientId, Http.Client) { }
 
     /// <summary>
     /// Sets Default ClientId
     /// </summary>
-    public async Task SetClientIdAsync(CancellationToken cancellationToken = default)
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         ClientId = await GetClientIdAsync(cancellationToken);
         _endpoint.ClientId = ClientId;
@@ -129,7 +122,8 @@ public class SoundCloudClient
         string filePath,
         IProgress<double>? progress = null,
         Dictionary<string, string>? headers = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var mp3TrackMediaUrl = await Tracks.GetDownloadUrlAsync(track, cancellationToken);
         if (mp3TrackMediaUrl is null)
@@ -161,11 +155,11 @@ public class SoundCloudClient
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})." +
-                Environment.NewLine +
-                "Request:" +
-                Environment.NewLine +
-                request
+                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})."
+                    + Environment.NewLine
+                    + "Request:"
+                    + Environment.NewLine
+                    + request
             );
         }
 
@@ -177,6 +171,7 @@ public class SoundCloudClient
             destination,
             totalLength,
             progress,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
     }
 }

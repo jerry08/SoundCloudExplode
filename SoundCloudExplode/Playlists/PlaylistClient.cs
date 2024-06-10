@@ -19,24 +19,13 @@ namespace SoundCloudExplode.Playlists;
 /// Operations related to Soundcloud playlist/album.
 /// (Note: Everything for Playlists and Albums are handled the same.)
 /// </summary>
-public class PlaylistClient
+/// <remarks>
+/// Initializes an instance of <see cref="PlaylistClient"/>.
+/// </remarks>
+public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
 {
-    private readonly HttpClient _http;
-    private readonly SoundcloudEndpoint _endpoint;
-
     private readonly Regex ShortUrlRegex = new(@"on\.soundcloud\..+?\/.+?");
     private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/[a-zA-Z]+");
-
-    /// <summary>
-    /// Initializes an instance of <see cref="PlaylistClient"/>.
-    /// </summary>
-    public PlaylistClient(
-        HttpClient http,
-        SoundcloudEndpoint endpoint)
-    {
-        _http = http;
-        _endpoint = endpoint;
-    }
 
     /// <summary>
     /// Checks for valid playlist url.
@@ -44,12 +33,13 @@ public class PlaylistClient
     /// <exception cref="SoundcloudExplodeException"/>
     public async Task<bool> IsUrlValidAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (ShortUrlRegex.IsMatch(url))
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            using var response = await _http.SendAsync(
+            using var response = await http.SendAsync(
                 request,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken
@@ -75,12 +65,13 @@ public class PlaylistClient
     public async ValueTask<Playlist> GetAsync(
         string url,
         bool populateAllTracks = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (!await IsUrlValidAsync(url, cancellationToken))
             throw new SoundcloudExplodeException("Invalid playlist url");
 
-        var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
+        var resolvedJson = await endpoint.ResolveUrlAsync(url, cancellationToken);
         var playlist = JsonSerializer.Deserialize<Playlist>(resolvedJson)!;
 
         if (populateAllTracks)
@@ -103,7 +94,8 @@ public class PlaylistClient
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         if (!await IsUrlValidAsync(url, cancellationToken))
             throw new SoundcloudExplodeException("Invalid playlist url");
@@ -122,8 +114,8 @@ public class PlaylistClient
             var idsStr = string.Join(",", ids);
 
             // Tracks are returned unordered here even though the ids are in the right order in the url
-            var response = await _http.ExecuteGetAsync(
-                $"https://api-v2.soundcloud.com/tracks?ids={idsStr}&limit={limit}&offset={offset}&client_id={Constants.ClientId}",
+            var response = await http.ExecuteGetAsync(
+                $"https://api-v2.soundcloud.com/tracks?ids={idsStr}&limit={limit}&offset={offset}&client_id={endpoint.ClientId}",
                 cancellationToken
             );
 
@@ -146,8 +138,8 @@ public class PlaylistClient
         string url,
         int offset = Constants.DefaultOffset,
         int limit = Constants.DefaultLimit,
-        CancellationToken cancellationToken = default) =>
-        GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
+        CancellationToken cancellationToken = default
+    ) => GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
 
     /// <summary>
     /// Enumerates tracks included in the specified playlist url.
@@ -155,6 +147,6 @@ public class PlaylistClient
     /// <exception cref="SoundcloudExplodeException"/>
     public IAsyncEnumerable<Track> GetTracksAsync(
         string url,
-        CancellationToken cancellationToken) =>
-        GetTrackBatchesAsync(url, cancellationToken: cancellationToken).FlattenAsync();
+        CancellationToken cancellationToken
+    ) => GetTrackBatchesAsync(url, cancellationToken: cancellationToken).FlattenAsync();
 }

@@ -30,7 +30,7 @@ public class SearchSpecs
         var videos = await soundcloud.Search.GetTracksAsync("adele").CollectAsync(10);
 
         // Assert
-        videos.Should().HaveCountGreaterOrEqualTo(50);
+        videos.Should().HaveCountGreaterOrEqualTo(10);
     }
 
     [Fact]

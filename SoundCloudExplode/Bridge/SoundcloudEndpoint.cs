@@ -6,27 +6,21 @@ using SoundCloudExplode.Utils.Extensions;
 
 namespace SoundCloudExplode.Bridge;
 
-public class SoundcloudEndpoint
+public class SoundcloudEndpoint(HttpClient http)
 {
-    private readonly HttpClient _http;
-
     public string ClientId { get; set; } = default!;
-
-    public SoundcloudEndpoint(HttpClient http)
-    {
-        _http = http;
-    }
 
     public async ValueTask<string> ResolveUrlAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var host = new Uri(url).Host;
 
-        if (host.StartsWith("on."))
+        if (host.StartsWith("on.", StringComparison.OrdinalIgnoreCase))
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            using var response = await _http.SendAsync(
+            using var response = await http.SendAsync(
                 request,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken
@@ -34,28 +28,21 @@ public class SoundcloudEndpoint
 
             url = response.RequestMessage!.RequestUri!.ToString();
 
-            var builder = new UriBuilder(url)
-            {
-                Query = "",
-                Fragment = ""
-            };
+            var builder = new UriBuilder(url) { Query = "", Fragment = "" };
 
             url = builder.Uri.ToString();
 
             host = new Uri(url).Host;
         }
 
-        if (host.StartsWith("m."))
+        if (host.StartsWith("m.", StringComparison.OrdinalIgnoreCase))
         {
-            var builder = new UriBuilder(url)
-            {
-                Host = host.Substring(2)
-            };
+            var builder = new UriBuilder(url) { Host = host.Substring(2) };
 
             url = builder.Uri.ToString();
         }
 
-        return await _http.ExecuteGetAsync(
+        return await http.ExecuteGetAsync(
             $"{Constants.ResolveEndpoint}?url={url}&client_id={ClientId}",
             cancellationToken
         );
