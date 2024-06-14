@@ -21,10 +21,10 @@ namespace SoundCloudExplode;
 /// </summary>
 public class SoundCloudClient
 {
-    internal string ClientId { get; private set; }
-
     private readonly HttpClient _http;
     private readonly SoundcloudEndpoint _endpoint;
+
+    public string ClientId { get; set; }
 
     private readonly string BaseUrl = "https://soundcloud.com";
 
