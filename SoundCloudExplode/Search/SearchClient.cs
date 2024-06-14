@@ -95,7 +95,10 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
                 // User result
                 if (permalinkUri.Segments.Length == 2)
                 {
-                    var user = JsonSerializer.Deserialize<UserSearchResult>(item.ToString()!)!;
+                    var user = JsonSerializer.Deserialize(
+                        item.ToString()!,
+                        SourceGenerationContext.Default.UserSearchResult
+                    )!;
                     results.Add(user);
                     continue;
                 }
@@ -103,7 +106,10 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
                 // Track result
                 if (permalinkUri.Segments.Length == 3)
                 {
-                    var track = JsonSerializer.Deserialize<TrackSearchResult>(item.ToString()!)!;
+                    var track = JsonSerializer.Deserialize(
+                        item.ToString()!,
+                        SourceGenerationContext.Default.TrackSearchResult
+                    )!;
                     results.Add(track);
                     continue;
                 }
@@ -111,8 +117,9 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
                 // Playlist/Album result
                 if (permalinkUri.Segments.Length == 4 && permalinkUri.Segments[2] == "sets/")
                 {
-                    var playlist = JsonSerializer.Deserialize<PlaylistSearchResult>(
-                        item.ToString()!
+                    var playlist = JsonSerializer.Deserialize(
+                        item.ToString()!,
+                        SourceGenerationContext.Default.PlaylistSearchResult
                     )!;
                     results.Add(playlist);
                 }

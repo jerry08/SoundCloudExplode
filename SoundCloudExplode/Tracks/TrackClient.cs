@@ -64,7 +64,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
 
         var resolvedJson = await endpoint.ResolveUrlAsync(url, cancellationToken);
 
-        return JsonSerializer.Deserialize<Track>(resolvedJson)!;
+        return JsonSerializer.Deserialize(resolvedJson, SourceGenerationContext.Default.Track)!;
     }
 
     /// <summary>
@@ -83,7 +83,10 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
         if (trackInfoJson is null)
             return null;
 
-        var track = JsonSerializer.Deserialize<Track>(trackInfoJson);
+        var track = JsonSerializer.Deserialize(
+            trackInfoJson,
+            SourceGenerationContext.Default.Track
+        );
         return track is null || track.PermalinkUrl is null
             ? null
             : (track.PermalinkUrl?.ToString());

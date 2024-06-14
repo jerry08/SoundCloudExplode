@@ -72,7 +72,10 @@ public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
             throw new SoundcloudExplodeException("Invalid playlist url");
 
         var resolvedJson = await endpoint.ResolveUrlAsync(url, cancellationToken);
-        var playlist = JsonSerializer.Deserialize<Playlist>(resolvedJson)!;
+        var playlist = JsonSerializer.Deserialize(
+            resolvedJson,
+            SourceGenerationContext.Default.Playlist
+        )!;
 
         if (populateAllTracks)
         {
@@ -119,7 +122,10 @@ public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
                 cancellationToken
             );
 
-            var tracks = JsonSerializer.Deserialize<List<Track>>(response)!;
+            var tracks = JsonSerializer.Deserialize(
+                response,
+                SourceGenerationContext.Default.ListTrack
+            )!;
             foreach (var track in tracks)
                 track.PlaylistName = playlist.Title;
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -52,7 +51,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
             throw new SoundcloudExplodeException("Invalid user url");
 
         var resolvedJson = await endpoint.ResolveUrlAsync(url, cancellationToken);
-        return JsonSerializer.Deserialize<User>(resolvedJson)!;
+        return JsonSerializer.Deserialize(resolvedJson, SourceGenerationContext.Default.User)!;
     }
 
     /// <summary>
@@ -100,8 +99,9 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
                 break;
 
             if (
-                JsonSerializer.Deserialize<List<Track>>(collectionStr) is not List<Track> list
-                || !list.Any()
+                JsonSerializer.Deserialize(collectionStr, SourceGenerationContext.Default.ListTrack)
+                    is not List<Track> list
+                || list.Count == 0
             )
             {
                 break;
@@ -204,8 +204,12 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
                 break;
 
             if (
-                JsonSerializer.Deserialize<List<Playlist>>(collectionStr) is not List<Playlist> list
-                || !list.Any()
+                JsonSerializer.Deserialize(
+                    collectionStr,
+                    SourceGenerationContext.Default.ListPlaylist
+                )
+                    is not List<Playlist> list
+                || list.Count == 0
             )
             {
                 break;
@@ -280,8 +284,12 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
                 break;
 
             if (
-                JsonSerializer.Deserialize<List<Playlist>>(collectionStr) is not List<Playlist> list
-                || !list.Any()
+                JsonSerializer.Deserialize(
+                    collectionStr,
+                    SourceGenerationContext.Default.ListPlaylist
+                )
+                    is not List<Playlist> list
+                || list.Count == 0
             )
             {
                 break;
