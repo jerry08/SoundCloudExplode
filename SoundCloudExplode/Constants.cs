@@ -1,6 +1,6 @@
 ﻿namespace SoundCloudExplode;
 
-internal static class Constants
+public static class Constants
 {
     public const string ClientId = "ICQyLasUBASlFk0tLJ8FRmTTFc11FVBZ";
 

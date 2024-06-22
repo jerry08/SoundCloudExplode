@@ -33,6 +33,11 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
         CancellationToken cancellationToken = default
     )
     {
+        if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+            return false;
+
+        url = url.ToLower();
+
         if (ShortUrlRegex.IsMatch(url))
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -45,9 +50,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
             url = response.RequestMessage!.RequestUri!.ToString();
         }
 
-        url = url.ToLower();
-        var isUrl = Uri.IsWellFormedUriString(url, UriKind.Absolute);
-        return isUrl && (TracksRegex.IsMatch(url) || SingleTrackRegex.IsMatch(url));
+        return TracksRegex.IsMatch(url) || SingleTrackRegex.IsMatch(url);
     }
 
     /// <summary>

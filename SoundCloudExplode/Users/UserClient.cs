@@ -66,10 +66,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        if (limit is < Constants.MinLimit or > Constants.MaxLimit)
-            throw new SoundcloudExplodeException(
-                $"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}"
-            );
+        Limitor.Validate(limit);
 
         var user = await GetAsync(url, cancellationToken);
 
@@ -177,10 +174,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        if (limit is < Constants.MinLimit or > Constants.MaxLimit)
-            throw new SoundcloudExplodeException(
-                $"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}"
-            );
+        Limitor.Validate(limit);
 
         var user = await GetAsync(url, cancellationToken);
 
@@ -257,10 +251,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        if (limit is < Constants.MinLimit or > Constants.MaxLimit)
-            throw new SoundcloudExplodeException(
-                $"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}"
-            );
+        Limitor.Validate(limit);
 
         var user = await GetAsync(url, cancellationToken);
 
