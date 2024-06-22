@@ -13,5 +13,10 @@ public enum UserTrackSortBy
     /// <summary>
     /// Sort by popular tracks.
     /// </summary>
-    Popular
+    Popular,
+
+    /// <summary>
+    /// Sort by liked tracks.
+    /// </summary>
+    Likes
 }

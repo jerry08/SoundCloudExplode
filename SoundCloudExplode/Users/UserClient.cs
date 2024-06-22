@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
@@ -23,6 +25,8 @@ namespace SoundCloudExplode.Users;
 /// </remarks>
 public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
 {
+    private readonly Regex LikesRegex = new(@"soundcloud\..+?\/(.*?)\/likes");
+
     /// <summary>
     /// Checks for valid user url.
     /// </summary>
@@ -30,16 +34,26 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
     /// <exception cref="SoundcloudExplodeException"/>
     public bool IsUrlValid(string url)
     {
-        url = url.ToLower();
-
         if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
             return false;
 
+        url = url.ToLower();
+
         var builder = new UriBuilder(url);
 
-        return (builder.Host == "soundcloud.com" || builder.Host == "m.soundcloud.com")
-            && builder.Uri.Segments.Length == 2;
+        return LikesRegex.IsMatch(url)
+            || (
+                (builder.Host == "soundcloud.com" || builder.Host == "m.soundcloud.com")
+                && builder.Uri.Segments.Length == 2
+            );
     }
+
+    /// <summary>
+    /// Checks for valid user likes url.
+    /// </summary>
+    /// <param name="url"></param>
+    public bool IsLikesUrlValid(string url) =>
+        Uri.IsWellFormedUriString(url, UriKind.Absolute) && LikesRegex.IsMatch(url);
 
     /// <summary>
     /// Gets the metadata associated with the specified user.
@@ -76,6 +90,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         var queryPart = trackQuery switch
         {
             UserTrackSortBy.Popular => "toptracks",
+            UserTrackSortBy.Likes => "track_likes",
             _ => "tracks"
         };
 
@@ -95,16 +110,35 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
             if (string.IsNullOrEmpty(collectionStr))
                 break;
 
-            if (
-                JsonSerializer.Deserialize(collectionStr, SourceGenerationContext.Default.ListTrack)
-                    is not List<Track> list
-                || list.Count == 0
-            )
+            if (trackQuery is UserTrackSortBy.Likes)
             {
-                break;
-            }
+                var list = doc.GetProperty("collection")
+                    .EnumerateArray()
+                    .Select(x =>
+                        x.GetProperty("track").Deserialize(SourceGenerationContext.Default.Track)
+                    )
+                    .Where(track => track is not null)
+                    .Select(track => track!)
+                    .ToList();
 
-            yield return Batch.Create(list);
+                yield return Batch.Create(list);
+            }
+            else
+            {
+                if (
+                    JsonSerializer.Deserialize(
+                        collectionStr,
+                        SourceGenerationContext.Default.ListTrack
+                    )
+                        is not List<Track> list
+                    || list.Count == 0
+                )
+                {
+                    break;
+                }
+
+                yield return Batch.Create(list);
+            }
 
             nextUrl = doc.GetProperty("next_href").GetString();
 
@@ -161,6 +195,30 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         CancellationToken cancellationToken
     ) =>
         GetTrackBatchesAsync(url, UserTrackSortBy.Popular, cancellationToken: cancellationToken)
+            .FlattenAsync();
+
+    /// <summary>
+    /// Enumerates popular track results returned by the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Track> GetLikedTracksAsync(
+        string url,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
+        CancellationToken cancellationToken = default
+    ) =>
+        GetTrackBatchesAsync(url, UserTrackSortBy.Likes, offset, limit, cancellationToken)
+            .FlattenAsync();
+
+    /// <summary>
+    /// Enumerates popular track results returned by the specified user url.
+    /// </summary>
+    /// <exception cref="SoundcloudExplodeException"/>
+    public IAsyncEnumerable<Track> GetLikedTracksAsync(
+        string url,
+        CancellationToken cancellationToken
+    ) =>
+        GetTrackBatchesAsync(url, UserTrackSortBy.Likes, cancellationToken: cancellationToken)
             .FlattenAsync();
 
     /// <summary>
