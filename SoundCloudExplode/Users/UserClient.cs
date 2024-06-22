@@ -211,7 +211,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync();
 
     /// <summary>
-    /// Enumerates popular track results returned by the specified user url.
+    /// Enumerates liked track results returned by the specified user url.
     /// </summary>
     /// <exception cref="SoundcloudExplodeException"/>
     public IAsyncEnumerable<Track> GetLikedTracksAsync(
