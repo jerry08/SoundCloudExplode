@@ -25,7 +25,7 @@ namespace SoundCloudExplode.Playlists;
 public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
 {
     private readonly Regex ShortUrlRegex = new(@"on\.soundcloud\..+?\/.+?");
-    private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/[a-zA-Z]+");
+    private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/(.*?)(?:&|/|$)");
 
     /// <summary>
     /// Checks for valid playlist url.
