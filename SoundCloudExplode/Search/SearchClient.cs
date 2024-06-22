@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Exceptions;
@@ -31,6 +33,34 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
     }
 
     /// <summary>
+    /// Gets a list of search queries returned by the specified query.
+    /// </summary>
+    public async ValueTask<List<string>> GetSearchQueriesAsync(
+        string query,
+        int offset = Constants.DefaultOffset,
+        int limit = Constants.DefaultLimit,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return [];
+
+        Limitor.Validate(limit);
+
+        var url =
+            $"https://api-v2.soundcloud.com/search/queries?q={Uri.EscapeDataString(query)}&client_id=Tl7CY6xVpYugZsGNqmzUhDCRX3urIPNv&limit={limit}&offset={offset}&linked_partitioning=1&app_version=1718276310&app_locale=en";
+
+        var response = await http.ExecuteGetAsync(url, cancellationToken);
+
+        return JsonDocument
+            .Parse(response)
+            .RootElement.GetProperty("collection")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("output").GetString()!)
+            .ToList();
+    }
+
+    /// <summary>
     /// Enumerates batches of search results returned by the specified query.
     /// </summary>
     /// <exception cref="SoundcloudExplodeException"/>
@@ -42,10 +72,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        if (limit is < Constants.MinLimit or > Constants.MaxLimit)
-            throw new SoundcloudExplodeException(
-                $"Limit must be between {Constants.MinLimit} and {Constants.MaxLimit}"
-            );
+        Limitor.Validate(limit);
 
         var encounteredUrls = new HashSet<string>(StringComparer.Ordinal);
         var continuationOffset = offset;
@@ -84,7 +111,9 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
                     permalinkUrl is null
                     || !Uri.IsWellFormedUriString(permalinkUrl, UriKind.Absolute)
                 )
+                {
                     continue;
+                }
 
                 // Don't yield the same result twice
                 if (!encounteredUrls.Add(permalinkUrl))
