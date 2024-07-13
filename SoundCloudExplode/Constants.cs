@@ -2,7 +2,7 @@
 
 public static class Constants
 {
-    public const string ClientId = "ICQyLasUBASlFk0tLJ8FRmTTFc11FVBZ";
+    public const string ClientId = "wDSKS1Bp8WmdlRPkZ7NQXGs67PMXl2Nd";
 
     public const string ResolveEndpoint = "https://api-v2.soundcloud.com/resolve";
     public const string TrackEndpoint = "https://api-v2.soundcloud.com/tracks";
