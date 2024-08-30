@@ -7,6 +7,7 @@ using SoundCloudExplode.Users;
 
 namespace SoundCloudExplode;
 
+[JsonSourceGenerationOptions(UseStringEnumConverter = true)]
 [JsonSerializable(typeof(Track))]
 [JsonSerializable(typeof(Playlist))]
 [JsonSerializable(typeof(User))]

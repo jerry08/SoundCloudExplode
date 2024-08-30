@@ -51,10 +51,10 @@ public class Track : IBatchItem
     public long Id { get; set; } = default!;
 
     [JsonPropertyName("kind")]
-    public string? Kind { get; set; }
+    public Kind Kind { get; set; }
 
     [JsonPropertyName("label_name")]
-    public object? LabelName { get; set; }
+    public string? LabelName { get; set; }
 
     [JsonPropertyName("last_modified")]
     public DateTimeOffset LastModified { get; set; }
@@ -81,10 +81,10 @@ public class Track : IBatchItem
     public PublisherMetadata? PublisherMetadata { get; set; }
 
     [JsonPropertyName("purchase_title")]
-    public object? PurchaseTitle { get; set; }
+    public string? PurchaseTitle { get; set; }
 
     [JsonPropertyName("purchase_url")]
-    public object? PurchaseUrl { get; set; }
+    public string? PurchaseUrl { get; set; }
 
     [JsonPropertyName("release_date")]
     public object? ReleaseDate { get; set; }
@@ -93,7 +93,7 @@ public class Track : IBatchItem
     public long? RepostsCount { get; set; }
 
     [JsonPropertyName("secret_token")]
-    public object? SecretToken { get; set; }
+    public string? SecretToken { get; set; }
 
     [JsonPropertyName("sharing")]
     public string? Sharing { get; set; }
@@ -123,7 +123,7 @@ public class Track : IBatchItem
     public object? Visuals { get; set; }
 
     [JsonPropertyName("waveform_url")]
-    public Uri? WaveformUrl { get; set; }
+    public string? WaveformUrl { get; set; }
 
     [JsonPropertyName("display_date")]
     public DateTimeOffset DisplayDate { get; set; }

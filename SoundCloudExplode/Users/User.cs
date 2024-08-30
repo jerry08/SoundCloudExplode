@@ -20,7 +20,7 @@ public class User : IBatchItem
     public long? Id { get; set; }
 
     [JsonPropertyName("kind")]
-    public string? Kind { get; set; }
+    public Kind Kind { get; set; }
 
     [JsonPropertyName("last_modified")]
     public DateTimeOffset? LastModified { get; set; }
@@ -32,7 +32,7 @@ public class User : IBatchItem
     public string? Permalink { get; set; }
 
     [JsonPropertyName("permalink_url")]
-    public Uri? PermalinkUrl { get; set; }
+    public string? PermalinkUrl { get; set; }
 
     [JsonPropertyName("uri")]
     public Uri? Uri { get; set; }
@@ -57,5 +57,6 @@ public class User : IBatchItem
 
     /// <inheritdoc />
     [ExcludeFromCodeCoverage]
-    public override string ToString() => $"User ({FullName})";
+    public override string ToString() =>
+        $"User ({(!string.IsNullOrWhiteSpace(FullName) ? FullName : Username)})";
 }
