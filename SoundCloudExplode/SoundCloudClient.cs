@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
+using SoundCloudExplode.Common;
+using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Playlists;
 using SoundCloudExplode.Search;
 using SoundCloudExplode.Tracks;
@@ -116,6 +120,28 @@ public class SoundCloudClient
         response = await _http.ExecuteGetAsync(scriptUrl!, cancellationToken);
 
         return response.Split(new[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
+    }
+
+    /// <summary>
+    /// Gets url kind of a SoundCloud link
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>Url <see cref="Kind"/></returns>
+    /// <exception cref="SoundcloudExplodeException"></exception>
+    public async Task<Kind> GetUrlKindAsync(
+        string url,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var resolvedJson = await _endpoint.ResolveUrlAsync(url, cancellationToken);
+        if (string.IsNullOrWhiteSpace(resolvedJson))
+            throw new SoundcloudExplodeException("Failed to resolve url.");
+
+        return JsonSerializer.Deserialize(
+            JsonNode.Parse(resolvedJson)!["kind"],
+            SourceGenerationContext.Default.Kind
+        );
     }
 
     /// <summary>
