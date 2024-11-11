@@ -91,7 +91,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         {
             UserTrackSortBy.Popular => "toptracks",
             UserTrackSortBy.Likes => "track_likes",
-            _ => "tracks"
+            _ => "tracks",
         };
 
         var nextUrl = default(string?);

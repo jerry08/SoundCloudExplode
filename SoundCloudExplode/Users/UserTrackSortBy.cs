@@ -18,5 +18,5 @@ public enum UserTrackSortBy
     /// <summary>
     /// Sort by liked tracks.
     /// </summary>
-    Likes
+    Likes,
 }

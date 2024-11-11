@@ -33,5 +33,5 @@ public enum SearchFilter
     /// <summary>
     /// Only search for users.
     /// </summary>
-    User
+    User,
 }

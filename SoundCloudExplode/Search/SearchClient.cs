@@ -86,7 +86,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             SearchFilter.PlaylistWithoutAlbums => "/playlists_without_albums",
             SearchFilter.Album => "/albums",
             SearchFilter.User => "/users",
-            _ => ""
+            _ => "",
         };
 
         while (true)

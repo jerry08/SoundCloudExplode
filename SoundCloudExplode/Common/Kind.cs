@@ -5,5 +5,5 @@ public enum Kind
     Track,
     Album,
     Playlist,
-    User
+    User,
 }
