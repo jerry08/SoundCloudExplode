@@ -13,7 +13,7 @@ internal static class Program
     {
         Console.Title = "SoundCloudExplode Demo";
 
-        System.Net.ServicePointManager.DefaultConnectionLimit = 200;
+        //System.Net.ServicePointManager.DefaultConnectionLimit = 200;
         //System.Net.ServicePointManager.MaxServicePoints = 500;
 
         var soundcloud = new SoundCloudClient();
