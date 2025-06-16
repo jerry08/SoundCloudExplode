@@ -17,6 +17,7 @@ internal static class Program
         //System.Net.ServicePointManager.MaxServicePoints = 500;
 
         var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
 
         while (true)
         {
