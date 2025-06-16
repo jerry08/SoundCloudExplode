@@ -16,7 +16,6 @@ namespace SoundCloudExplode.Search;
 ///     </list>
 /// </p>
 /// </summary>
-
 public interface ISearchResult : IBatchItem
 {
     /// <summary>

@@ -13,11 +13,27 @@ public class TrackSpecs
     {
         // Arrange
         var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
 
         // Act
         var results = await soundcloud.Tracks.GetAsync(url);
 
         // Assert
         results.Should().NotBeNull();
+    }
+
+    [Theory]
+    [InlineData("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description")]
+    public async Task I_can_get_the_download_url_of_a_track(string url)
+    {
+        // Arrange
+        var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
+
+        // Act
+        var result = await soundcloud.Tracks.GetDownloadUrlAsync(url);
+
+        // Assert
+        result.Should().NotBeNullOrEmpty();
     }
 }

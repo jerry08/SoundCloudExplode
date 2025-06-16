@@ -18,7 +18,7 @@ public class SearchSpecs
         var results = await soundcloud.Search.GetResultsAsync(query).CollectAsync(10);
 
         // Assert
-        results.Should().HaveCountGreaterOrEqualTo(10);
+        results.Should().HaveCountGreaterThanOrEqualTo(10);
     }
 
     [Theory]
@@ -32,7 +32,7 @@ public class SearchSpecs
         var videos = await soundcloud.Search.GetTracksAsync(query).CollectAsync(10);
 
         // Assert
-        videos.Should().HaveCountGreaterOrEqualTo(10);
+        videos.Should().HaveCountGreaterThanOrEqualTo(10);
     }
 
     [Theory]

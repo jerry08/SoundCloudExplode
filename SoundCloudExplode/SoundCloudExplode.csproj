@@ -1,12 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net461;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net9.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
-    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</IsTrimmable>
-    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
+    <IsTrimmable
+      Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))"
+      >true</IsTrimmable
+    >
+    <IsAotCompatible
+      Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))"
+      >true</IsAotCompatible
+    >
   </PropertyGroup>
-
   <!-- NuGet -->
   <PropertyGroup>
     <Authors>$(Company)</Authors>
@@ -21,22 +25,31 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
-
   <!-- Package additions -->
   <ItemGroup>
     <None Include="../favicon.png" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="CSharpier.MsBuild" Version="0.29.2" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'" />
+    <PackageReference Include="CSharpier.MsBuild" Version="1.0.2" PrivateAssets="all" />
+    <PackageReference
+      Include="Microsoft.Bcl.AsyncInterfaces"
+      Version="9.0.6"
+      Condition="'$(TargetFramework)' == 'netstandard2.0'"
+    />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
-    <PackageReference Include="PolyShim" Version="1.14.0" PrivateAssets="all" />
-    <PackageReference Include="System.Text.Json" Version="8.0.5" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp' or '$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="PolyShim" Version="1.15.0" PrivateAssets="all" />
+    <PackageReference
+      Include="System.Text.Json"
+      Version="9.0.6"
+      Condition="'$(TargetFramework)' == 'netstandard2.0'"
+    />
+    <PackageReference
+      Include="System.Threading.Tasks.Extensions"
+      Version="4.6.3"
+      Condition="'$(TargetFramework)' == 'netstandard2.0'"
+    />
   </ItemGroup>
-
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <Reference Include="System.Net.Http" />
   </ItemGroup>
-
 </Project>
