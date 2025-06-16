@@ -20,8 +20,9 @@ namespace SoundCloudExplode.Tracks;
 public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
 {
     private readonly Regex ShortUrlRegex = new(@"on\.soundcloud\..+?\/.+?");
-    private readonly Regex SingleTrackRegex =
-        new(@"soundcloud\..+?\/(.*?)\/[a-zA-Z0-9~@#$^*()_+=[\]{}|\\,.?: -]+");
+    private readonly Regex SingleTrackRegex = new(
+        @"soundcloud\..+?\/(.*?)\/[a-zA-Z0-9~@#$^*()_+=[\]{}|\\,.?: -]+"
+    );
     private readonly Regex TracksRegex = new(@"soundcloud\..+?\/(.*?)\/track");
 
     /// <summary>
@@ -173,26 +174,36 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
             throw new TrackUnavailableException("No transcodings found");
         }
 
-        var trackUrl = "";
-
-        // Progrssive/Stream
-        var transcoding = track.Media.Transcodings.FirstOrDefault(x =>
-            x.Quality == "sq"
-            && x.Format?.MimeType?.Contains("audio/mpeg") == true
-            && x.Format.Protocol == "progressive"
-        );
-
-        // Hls
-        transcoding ??= track.Media.Transcodings.FirstOrDefault(x =>
-            x.Quality == "sq"
-            && x.Format?.MimeType?.Contains("ogg") == true
-            && x.Format.Protocol == "hls"
-        );
+        var transcoding =
+            // Progrssive/Stream - high quality
+            track.Media.Transcodings.FirstOrDefault(x =>
+                x.Quality == "hq"
+                && x.Format?.MimeType?.Contains("audio/mp4") == true
+                && x.Format.Protocol == "progressive"
+            )
+            ?? // Hls - high quality
+            track.Media.Transcodings.FirstOrDefault(x =>
+                x.Quality == "hq"
+                && x.Format?.MimeType?.Contains("audio/mp4") == true
+                && x.Format.Protocol == "hls"
+            )
+            ?? // Progrssive/Stream - standard quality
+            track.Media.Transcodings.FirstOrDefault(x =>
+                x.Quality == "sq"
+                && x.Format?.MimeType?.Contains("audio/mpeg") == true
+                && x.Format.Protocol == "progressive"
+            )
+            ?? // Hls  - standard quality
+            track.Media.Transcodings.FirstOrDefault(x =>
+                x.Quality == "sq"
+                && x.Format?.MimeType?.Contains("ogg") == true
+                && x.Format.Protocol == "hls"
+            );
 
         if (transcoding is null || transcoding.Url is null)
             return null;
 
-        trackUrl += transcoding.Url.ToString() + $"?client_id={endpoint.ClientId}";
+        var trackUrl = transcoding.Url.ToString() + $"?client_id={endpoint.ClientId}";
 
         var trackMedia = await http.ExecuteGetAsync(trackUrl, cancellationToken);
 

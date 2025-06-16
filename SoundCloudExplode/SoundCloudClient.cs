@@ -57,7 +57,25 @@ public class SoundCloudClient
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
+    public SoundCloudClient(string clientId, HttpClient http, string? authorization = null)
+    {
+        ClientId = clientId;
+        _http = http;
+
+        if (!string.IsNullOrWhiteSpace(authorization))
+            http.DefaultRequestHeaders.Add("Authorization", authorization);
+
+        _endpoint = new(http) { ClientId = clientId };
+
+        Search = new(http, _endpoint);
+        Tracks = new(http, _endpoint);
+        Playlists = new(http, _endpoint);
+        Users = new(http, _endpoint);
+    }
+
+    /// <inheritdoc cref="SoundCloudClient"/>
     public SoundCloudClient(string clientId, HttpClient http)
+        : this(clientId, http, null)
     {
         ClientId = clientId;
         _http = http;
@@ -70,21 +88,21 @@ public class SoundCloudClient
         Users = new(http, _endpoint);
     }
 
-    /// <summary>
-    /// Initializes an instance of <see cref="SoundCloudClient"/>.
-    /// </summary>
+    /// <inheritdoc cref="SoundCloudClient"/>
     public SoundCloudClient()
         : this(Constants.ClientId, Http.Client) { }
 
-    /// <summary>
-    /// Initializes an instance of <see cref="SoundCloudClient"/>.
-    /// </summary>
+    /// <inheritdoc cref="SoundCloudClient"/>
     public SoundCloudClient(HttpClient http)
         : this(Constants.ClientId, http) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
     /// </summary>
+    public SoundCloudClient(string clientId, string authorization)
+        : this(clientId, Http.Client, authorization) { }
+
+    /// <inheritdoc cref="SoundCloudClient"/>
     public SoundCloudClient(string clientId)
         : this(clientId, Http.Client) { }
 
@@ -117,9 +135,9 @@ public class SoundCloudClient
         if (string.IsNullOrEmpty(scriptUrl))
             return string.Empty;
 
-        response = await _http.ExecuteGetAsync(scriptUrl!, cancellationToken);
+        response = await _http.ExecuteGetAsync(scriptUrl, cancellationToken);
 
-        return response.Split(new[] { ",client_id" }, StringSplitOptions.None)[1].Split('"')[1];
+        return response.Split([",client_id"], StringSplitOptions.None)[1].Split('"')[1];
     }
 
     /// <summary>
