@@ -22,15 +22,12 @@ namespace SoundCloudExplode.Playlists;
 /// <remarks>
 /// Initializes an instance of <see cref="PlaylistClient"/>.
 /// </remarks>
-public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
+public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint) : IPlaylistClient
 {
     private readonly Regex ShortUrlRegex = new(@"on\.soundcloud\..+?\/.+?");
     private readonly Regex PlaylistRegex = new(@"soundcloud\..+?\/(.*?)\/sets\/(.*?)(?:&|/|$)");
 
-    /// <summary>
-    /// Checks for valid playlist url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async Task<bool> IsUrlValidAsync(
         string url,
         CancellationToken cancellationToken = default
@@ -56,15 +53,7 @@ public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
         return PlaylistRegex.IsMatch(url);
     }
 
-    /// <summary>
-    /// Gets the metadata associated with the specified playlist.
-    /// </summary>
-    /// <param name="url"></param>
-    /// <param name="populateAllTracks">Set to true if you want to populate all tracks in playlist.
-    /// information at the same time. If false, only the tracks id and playlist info will return.
-    /// </param>
-    /// <param name="cancellationToken"></param>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async ValueTask<Playlist> GetAsync(
         string url,
         bool populateAllTracks = false,
@@ -92,10 +81,7 @@ public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
         return playlist;
     }
 
-    /// <summary>
-    /// Enumerates tracks included in the specified playlist url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async IAsyncEnumerable<Batch<Track>> GetTrackBatchesAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -139,10 +125,7 @@ public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
         }
     }
 
-    /// <summary>
-    /// Enumerates tracks included in the specified playlist url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public IAsyncEnumerable<Track> GetTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -150,10 +133,7 @@ public class PlaylistClient(HttpClient http, SoundcloudEndpoint endpoint)
         CancellationToken cancellationToken = default
     ) => GetTrackBatchesAsync(url, offset, limit, cancellationToken).FlattenAsync();
 
-    /// <summary>
-    /// Enumerates tracks included in the specified playlist url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public IAsyncEnumerable<Track> GetTracksAsync(
         string url,
         CancellationToken cancellationToken

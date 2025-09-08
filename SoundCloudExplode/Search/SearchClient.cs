@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using SoundCloudExplode.Bridge;
 using SoundCloudExplode.Common;
-using SoundCloudExplode.Exceptions;
 using SoundCloudExplode.Utils.Extensions;
 
 namespace SoundCloudExplode.Search;
@@ -19,22 +18,16 @@ namespace SoundCloudExplode.Search;
 /// <remarks>
 /// Initializes an instance of <see cref="SearchClient"/>.
 /// </remarks>
-public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
+public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint) : ISearchClient
 {
-    /// <summary>
-    /// Checks for valid track(s) url.
-    /// </summary>
-    /// <param name="url"></param>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public bool IsUrlValid(string url)
     {
         url = url.ToLower();
         return Uri.IsWellFormedUriString(url, UriKind.Absolute);
     }
 
-    /// <summary>
-    /// Gets a list of search queries returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public async ValueTask<List<string>> GetSearchQueriesAsync(
         string query,
         int offset = Constants.DefaultOffset,
@@ -60,10 +53,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .ToList();
     }
 
-    /// <summary>
-    /// Enumerates batches of search results returned by the specified query.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async IAsyncEnumerable<Batch<ISearchResult>> GetResultBatchesAsync(
         string searchQuery,
         SearchFilter searchFilter,
@@ -163,9 +153,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
         }
     }
 
-    /// <summary>
-    /// Enumerates batches of search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<Batch<ISearchResult>> GetResultBatchesAsync(
         string searchQuery,
         int offset = Constants.DefaultOffset,
@@ -173,18 +161,14 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
         CancellationToken cancellationToken = default
     ) => GetResultBatchesAsync(searchQuery, SearchFilter.None, offset, limit, cancellationToken);
 
-    /// <summary>
-    /// Enumerates batches of search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<Batch<ISearchResult>> GetResultBatchesAsync(
         string searchQuery,
         CancellationToken cancellationToken
     ) =>
         GetResultBatchesAsync(searchQuery, SearchFilter.None, cancellationToken: cancellationToken);
 
-    /// <summary>
-    /// Enumerates search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<ISearchResult> GetResultsAsync(
         string searchQuery,
         int offset = Constants.DefaultOffset,
@@ -192,17 +176,13 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
         CancellationToken cancellationToken = default
     ) => GetResultBatchesAsync(searchQuery, offset, limit, cancellationToken).FlattenAsync();
 
-    /// <summary>
-    /// Enumerates search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<ISearchResult> GetResultsAsync(
         string searchQuery,
         CancellationToken cancellationToken
     ) => GetResultBatchesAsync(searchQuery, cancellationToken).FlattenAsync();
 
-    /// <summary>
-    /// Enumerates playlist search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsAsync(
         string searchQuery,
         int offset = Constants.DefaultOffset,
@@ -213,9 +193,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<PlaylistSearchResult>();
 
-    /// <summary>
-    /// Enumerates playlist search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsAsync(
         string searchQuery,
         CancellationToken cancellationToken
@@ -228,9 +206,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<PlaylistSearchResult>();
 
-    /// <summary>
-    /// Enumerates playlists without albums search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsWithoutAlbumsAsync(
         string searchQuery,
         int offset = Constants.DefaultOffset,
@@ -247,9 +223,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<PlaylistSearchResult>();
 
-    /// <summary>
-    /// Enumerates playlists without albums search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<PlaylistSearchResult> GetPlaylistsWithoutAlbumsAsync(
         string searchQuery,
         CancellationToken cancellationToken
@@ -262,9 +236,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<PlaylistSearchResult>();
 
-    /// <summary>
-    /// Enumerates track search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<TrackSearchResult> GetTracksAsync(
         string searchQuery,
         int offset = Constants.DefaultOffset,
@@ -275,9 +247,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<TrackSearchResult>();
 
-    /// <summary>
-    /// Enumerates track search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<TrackSearchResult> GetTracksAsync(
         string searchQuery,
         CancellationToken cancellationToken
@@ -286,9 +256,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<TrackSearchResult>();
 
-    /// <summary>
-    /// Enumerates user search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<UserSearchResult> GetUsersAsync(
         string searchQuery,
         int offset = Constants.DefaultOffset,
@@ -299,9 +267,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<UserSearchResult>();
 
-    /// <summary>
-    /// Enumerates user search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<UserSearchResult> GetUsersAsync(
         string searchQuery,
         CancellationToken cancellationToken
@@ -310,9 +276,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<UserSearchResult>();
 
-    /// <summary>
-    /// Enumerates album search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<PlaylistSearchResult> GetAlbumsAsync(
         string searchQuery,
         int offset = Constants.DefaultOffset,
@@ -323,9 +287,7 @@ public class SearchClient(HttpClient http, SoundcloudEndpoint endpoint)
             .FlattenAsync()
             .OfTypeAsync<PlaylistSearchResult>();
 
-    /// <summary>
-    /// Enumerates album search results returned by the specified query.
-    /// </summary>
+    /// <inheritdoc />
     public IAsyncEnumerable<PlaylistSearchResult> GetAlbumsAsync(
         string searchQuery,
         CancellationToken cancellationToken

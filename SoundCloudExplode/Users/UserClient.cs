@@ -23,15 +23,11 @@ namespace SoundCloudExplode.Users;
 /// <remarks>
 /// Initializes an instance of <see cref="UserClient"/>.
 /// </remarks>
-public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
+public class UserClient(HttpClient http, SoundcloudEndpoint endpoint) : IUserClient
 {
     private readonly Regex LikesRegex = new(@"soundcloud\..+?\/(.*?)\/likes");
 
-    /// <summary>
-    /// Checks for valid user url.
-    /// </summary>
-    /// <param name="url"></param>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public bool IsUrlValid(string url)
     {
         if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
@@ -48,17 +44,11 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
             );
     }
 
-    /// <summary>
-    /// Checks for valid user likes url.
-    /// </summary>
-    /// <param name="url"></param>
+    /// <inheritdoc />
     public bool IsLikesUrlValid(string url) =>
         Uri.IsWellFormedUriString(url, UriKind.Absolute) && LikesRegex.IsMatch(url);
 
-    /// <summary>
-    /// Gets the metadata associated with the specified user.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async ValueTask<User> GetAsync(string url, CancellationToken cancellationToken = default)
     {
         if (!IsUrlValid(url))
@@ -68,10 +58,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         return JsonSerializer.Deserialize(resolvedJson, SourceGenerationContext.Default.User)!;
     }
 
-    /// <summary>
-    /// Gets tracks included in the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async IAsyncEnumerable<Batch<Track>> GetTrackBatchesAsync(
         string url,
         UserTrackSortBy trackQuery,
@@ -149,10 +136,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         }
     }
 
-    /// <summary>
-    /// Enumerates track results returned by the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public IAsyncEnumerable<Track> GetTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -173,10 +157,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         GetTrackBatchesAsync(url, UserTrackSortBy.Default, cancellationToken: cancellationToken)
             .FlattenAsync();
 
-    /// <summary>
-    /// Enumerates popular track results returned by the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public IAsyncEnumerable<Track> GetPopularTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -197,10 +178,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         GetTrackBatchesAsync(url, UserTrackSortBy.Popular, cancellationToken: cancellationToken)
             .FlattenAsync();
 
-    /// <summary>
-    /// Enumerates popular track results returned by the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public IAsyncEnumerable<Track> GetLikedTracksAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -221,10 +199,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         GetTrackBatchesAsync(url, UserTrackSortBy.Likes, cancellationToken: cancellationToken)
             .FlattenAsync();
 
-    /// <summary>
-    /// Gets tracks included in the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async IAsyncEnumerable<Batch<Playlist>> GetPlaylistBatchesAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -278,10 +253,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         }
     }
 
-    /// <summary>
-    /// Enumerates playlist results returned by the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public IAsyncEnumerable<Playlist> GetPlaylistsAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -298,10 +270,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         CancellationToken cancellationToken
     ) => GetPlaylistBatchesAsync(url, cancellationToken: cancellationToken).FlattenAsync();
 
-    /// <summary>
-    /// Gets tracks included in the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async IAsyncEnumerable<Batch<Playlist>> GetAlbumBatchesAsync(
         string url,
         int offset = Constants.DefaultOffset,
@@ -355,10 +324,7 @@ public class UserClient(HttpClient http, SoundcloudEndpoint endpoint)
         }
     }
 
-    /// <summary>
-    /// Enumerates album results returned by the specified user url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public IAsyncEnumerable<Playlist> GetAlbumsAsync(
         string url,
         int offset = Constants.DefaultOffset,

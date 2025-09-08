@@ -17,7 +17,7 @@ namespace SoundCloudExplode.Tracks;
 /// <remarks>
 /// Initializes an instance of <see cref="TrackClient"/>.
 /// </remarks>
-public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
+public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint) : ITrackClient
 {
     private readonly Regex ShortUrlRegex = new(@"on\.soundcloud\..+?\/.+?");
     private readonly Regex SingleTrackRegex = new(
@@ -25,10 +25,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
     );
     private readonly Regex TracksRegex = new(@"soundcloud\..+?\/(.*?)\/track");
 
-    /// <summary>
-    /// Checks for valid track(s) url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async Task<bool> IsUrlValidAsync(
         string url,
         CancellationToken cancellationToken = default
@@ -54,10 +51,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
         return TracksRegex.IsMatch(url) || SingleTrackRegex.IsMatch(url);
     }
 
-    /// <summary>
-    /// Gets the metadata associated with the specified track.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async ValueTask<Track?> GetAsync(
         string url,
         CancellationToken cancellationToken = default
@@ -71,10 +65,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
         return JsonSerializer.Deserialize(resolvedJson, SourceGenerationContext.Default.Track)!;
     }
 
-    /// <summary>
-    /// Gets the metadata associated with the specified track.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async ValueTask<string?> GetUrlByIdAsync(
         long trackId,
         CancellationToken cancellationToken = default
@@ -96,10 +87,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
             : (track.PermalinkUrl?.ToString());
     }
 
-    /// <summary>
-    /// Gets the metadata associated with the specified track.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async ValueTask<Track?> GetByIdAsync(
         long trackId,
         CancellationToken cancellationToken = default
@@ -135,10 +123,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
         return link;
     }
 
-    /// <summary>
-    /// Gets the download url from a track's url.
-    /// </summary>
-    /// <exception cref="SoundcloudExplodeException"/>
+    /// <inheritdoc />
     public async ValueTask<string?> GetDownloadUrlAsync(
         string url,
         CancellationToken cancellationToken = default
@@ -151,10 +136,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint)
         return await GetDownloadUrlAsync(track, cancellationToken);
     }
 
-    /// <summary>
-    /// Gets the download url from a track.
-    /// </summary>
-    /// <exception cref="TrackUnavailableException"/>
+    /// <inheritdoc />
     public async ValueTask<string?> GetDownloadUrlAsync(
         Track track,
         CancellationToken cancellationToken = default

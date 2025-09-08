@@ -23,7 +23,7 @@ namespace SoundCloudExplode;
 /// <summary>
 /// Initializes an instance of <see cref="SoundCloudClient"/>.
 /// </summary>
-public class SoundCloudClient
+public class SoundCloudClient : ISoundCloudClient
 {
     private readonly HttpClient _http;
     private readonly SoundcloudEndpoint _endpoint;
@@ -37,22 +37,22 @@ public class SoundCloudClient
     /// <summary>
     /// Operations related to Soundcloud search.
     /// </summary>
-    public SearchClient Search { get; }
+    public ISearchClient Search { get; }
 
     /// <summary>
     /// Operations related to Soundcloud tracks.
     /// </summary>
-    public TrackClient Tracks { get; }
+    public ITrackClient Tracks { get; }
 
     /// <summary>
     /// Operations related to Soundcloud playlists/albums.
     /// </summary>
-    public PlaylistClient Playlists { get; }
+    public IPlaylistClient Playlists { get; }
 
     /// <summary>
     /// Operations related to Soundcloud users.
     /// </summary>
-    public UserClient Users { get; }
+    public IUserClient Users { get; }
 
     /// <summary>
     /// Initializes an instance of <see cref="SoundCloudClient"/>.
@@ -67,26 +67,15 @@ public class SoundCloudClient
 
         _endpoint = new(http) { ClientId = clientId };
 
-        Search = new(http, _endpoint);
-        Tracks = new(http, _endpoint);
-        Playlists = new(http, _endpoint);
-        Users = new(http, _endpoint);
+        Search = new SearchClient(http, _endpoint);
+        Tracks = new TrackClient(http, _endpoint);
+        Playlists = new PlaylistClient(http, _endpoint);
+        Users = new UserClient(http, _endpoint);
     }
 
     /// <inheritdoc cref="SoundCloudClient"/>
     public SoundCloudClient(string clientId, HttpClient http)
-        : this(clientId, http, null)
-    {
-        ClientId = clientId;
-        _http = http;
-
-        _endpoint = new(http) { ClientId = clientId };
-
-        Search = new(http, _endpoint);
-        Tracks = new(http, _endpoint);
-        Playlists = new(http, _endpoint);
-        Users = new(http, _endpoint);
-    }
+        : this(clientId, http, null) { }
 
     /// <inheritdoc cref="SoundCloudClient"/>
     public SoundCloudClient()
