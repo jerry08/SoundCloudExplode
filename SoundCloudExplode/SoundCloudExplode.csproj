@@ -33,14 +33,18 @@
     <PackageReference Include="CSharpier.MsBuild" Version="1.1.2" PrivateAssets="all" />
     <PackageReference
       Include="Microsoft.Bcl.AsyncInterfaces"
-      Version="9.0.8"
+      Version="10.0.3"
       Condition="'$(TargetFramework)' == 'netstandard2.0'"
     />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
-    <PackageReference Include="PolyShim" Version="1.15.0" PrivateAssets="all" />
+    <PackageReference
+      Include="Microsoft.SourceLink.GitHub"
+      Version="10.0.103"
+      PrivateAssets="all"
+    />
+    <PackageReference Include="PolyShim" Version="2.6.0" PrivateAssets="all" />
     <PackageReference
       Include="System.Text.Json"
-      Version="9.0.8"
+      Version="10.0.3"
       Condition="'$(TargetFramework)' == 'netstandard2.0'"
     />
     <PackageReference
