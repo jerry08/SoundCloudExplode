@@ -43,7 +43,7 @@ public class SoundcloudEndpoint(HttpClient http)
         }
 
         return await http.ExecuteGetAsync(
-            $"{Constants.ResolveEndpoint}?url={url}&client_id={ClientId}",
+            $"{Constants.ResolveEndpoint}?url={Uri.EscapeDataString(url)}&client_id={Uri.EscapeDataString(ClientId)}",
             cancellationToken
         );
     }

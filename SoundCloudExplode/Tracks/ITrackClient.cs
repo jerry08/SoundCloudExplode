@@ -42,7 +42,7 @@ public interface ITrackClient
     ValueTask<Track?> GetByIdAsync(long trackId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets the download URL for a track from its URL.
+    /// Gets a progressive audio URL or an HLS playlist URL for a track from its URL.
     /// </summary>
     /// <param name="url">The track URL.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
@@ -53,7 +53,7 @@ public interface ITrackClient
     );
 
     /// <summary>
-    /// Gets the download URL for a track.
+    /// Gets a progressive audio URL or an HLS playlist URL for a track.
     /// </summary>
     /// <param name="track">The track object.</param>
     /// <param name="cancellationToken">A cancellation token.</param>

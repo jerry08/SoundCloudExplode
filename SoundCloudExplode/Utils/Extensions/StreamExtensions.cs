@@ -29,7 +29,10 @@ internal static class StreamExtensions
             await destination.WriteAsync(buffer.Memory[..bytesRead], cancellationToken);
 
             totalBytesRead += bytesRead;
-            progress?.Report(1.0 * totalBytesRead / totalLength);
+            if (totalLength > 0)
+                progress?.Report(Math.Min(1.0, 1.0 * totalBytesRead / totalLength));
         }
+
+        progress?.Report(1);
     }
 }

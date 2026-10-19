@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.Json.Serialization;
 using SoundCloudExplode.Common;
 using SoundCloudExplode.Users;
@@ -144,6 +145,37 @@ public class Track : IBatchItem
     /// Name of playlist/album
     /// </summary>
     public string? PlaylistName { get; set; }
+
+    /// <summary>
+    /// Gets the preferred supported audio transcoding. Concrete audio formats are preferred
+    /// over adaptive playlists, then higher quality and progressive delivery.
+    /// </summary>
+    public Transcoding? GetPreferredTranscoding() =>
+        Media
+            ?.Transcodings?.Where(x =>
+                x.Url is not null
+                && x.Format?.Protocol is "progressive" or "hls"
+                && x.Format.MimeType?.Split(';')[0].Trim().ToLowerInvariant()
+                    is "audio/mp4"
+                        or "audio/mpeg"
+                        or "audio/ogg"
+                        or "audio/aac"
+                        or "audio/mpegurl"
+                        or "application/vnd.apple.mpegurl"
+                        or "application/x-mpegurl"
+            )
+            .OrderBy(x => x.GetFileExtension() == ".audio")
+            .ThenBy(x =>
+                x.Quality?.ToLowerInvariant() switch
+                {
+                    "hq" => 0,
+                    "sq" => 1,
+                    "lq" => 2,
+                    _ => 3,
+                }
+            )
+            .ThenBy(x => x.Format?.Protocol == "progressive" ? 0 : 1)
+            .FirstOrDefault();
 
     /// <inheritdoc />
     [ExcludeFromCodeCoverage]

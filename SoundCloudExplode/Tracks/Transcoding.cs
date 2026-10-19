@@ -22,4 +22,18 @@ public class Transcoding
 
     [JsonPropertyName("quality")]
     public string? Quality { get; set; }
+
+    /// <summary>
+    /// Gets the file extension for this audio format, or .audio for an adaptive/unknown format.
+    /// Downloading preserves the source encoding; it does not convert audio to MP3.
+    /// </summary>
+    public string GetFileExtension() =>
+        Format?.MimeType?.Split(';')[0].Trim().ToLowerInvariant() switch
+        {
+            "audio/mp4" => ".m4a",
+            "audio/mpeg" => ".mp3",
+            "audio/ogg" => ".ogg",
+            "audio/aac" => ".aac",
+            _ => ".audio",
+        };
 }

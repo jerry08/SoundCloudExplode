@@ -152,7 +152,8 @@ public class SoundCloudClient : ISoundCloudClient
     }
 
     /// <summary>
-    /// Downloads a track
+    /// Downloads progressive audio or assembles an unencrypted, on-demand HLS stream.
+    /// The source audio encoding is preserved.
     /// </summary>
     public async ValueTask DownloadAsync(
         Track track,
@@ -162,53 +163,87 @@ public class SoundCloudClient : ISoundCloudClient
         CancellationToken cancellationToken = default
     )
     {
-        var mp3TrackMediaUrl = await Tracks.GetDownloadUrlAsync(track, cancellationToken);
-        if (mp3TrackMediaUrl is null)
-            return;
+        var mediaUrl =
+            await Tracks.GetDownloadUrlAsync(track, cancellationToken)
+            ?? throw new TrackUnavailableException("No supported audio stream found.");
+        using var request = CreateDownloadRequest(new Uri(mediaUrl), headers);
+        using var response = await _http.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
 
-        var dir = Path.GetDirectoryName(filePath);
-        if (dir is null)
-            return;
+        response.EnsureSuccessStatusCode();
 
-        if (!Directory.Exists(dir))
-            Directory.CreateDirectory(dir);
+        var responseUrl = response.RequestMessage?.RequestUri ?? request.RequestUri!;
+        IReadOnlyList<Uri>? segments = null;
+        if (
+            track.GetPreferredTranscoding()?.Format?.Protocol == "hls"
+            || HlsPlaylist.IsPlaylist(responseUrl, response.Content)
+        )
+        {
+            segments = await HlsPlaylist.GetSegmentsAsync(
+                responseUrl,
+                await response.Content.ReadAsStringAsync(cancellationToken),
+                async url =>
+                {
+                    using var playlistRequest = CreateDownloadRequest(url, headers);
+                    using var playlistResponse = await _http.SendAsync(
+                        playlistRequest,
+                        cancellationToken
+                    );
+                    playlistResponse.EnsureSuccessStatusCode();
+                    return await playlistResponse.Content.ReadAsStringAsync(cancellationToken);
+                }
+            );
+        }
 
-        using var destination = File.Create(filePath);
+        var fullPath = Path.GetFullPath(filePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+        using var destination = File.Create(fullPath);
 
-        var request = new HttpRequestMessage(HttpMethod.Get, mp3TrackMediaUrl);
+        if (segments is null)
+        {
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            await stream.CopyToAsync(
+                destination,
+                response.Content.Headers.ContentLength ?? 0,
+                progress,
+                cancellationToken: cancellationToken
+            );
+        }
+        else
+        {
+            for (var i = 0; i < segments.Count; i++)
+            {
+                using var segmentRequest = CreateDownloadRequest(segments[i], headers);
+                using var segmentResponse = await _http.SendAsync(
+                    segmentRequest,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken
+                );
+                segmentResponse.EnsureSuccessStatusCode();
+                using var stream = await segmentResponse.Content.ReadAsStreamAsync(
+                    cancellationToken
+                );
+                await stream.CopyToAsync(destination, 81920, cancellationToken);
+                progress?.Report((i + 1.0) / segments.Count);
+            }
+        }
+    }
 
+    private static HttpRequestMessage CreateDownloadRequest(
+        Uri url,
+        Dictionary<string, string>? headers
+    )
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         if (headers is not null)
         {
             foreach (var (key, value) in headers)
                 request.Headers.TryAddWithoutValidation(key, value);
         }
 
-        var response = await _http.SendAsync(
-            request,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
-                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})."
-                    + Environment.NewLine
-                    + "Request:"
-                    + Environment.NewLine
-                    + request
-            );
-        }
-
-        var totalLength = response.Content.Headers.ContentLength ?? 0;
-
-        var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-
-        await stream.CopyToAsync(
-            destination,
-            totalLength,
-            progress,
-            cancellationToken: cancellationToken
-        );
+        return request;
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -97,32 +96,6 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint) : ITrackC
         return trackUrl is null ? null : await GetAsync(trackUrl, cancellationToken);
     }
 
-    private async ValueTask<string?> QueryTrackMp3Async(
-        string trackM3u8,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var html = await http.ExecuteGetAsync(trackM3u8, cancellationToken);
-        var m3u8 = html.Split(',');
-
-        if (m3u8.Length == 0)
-            return null;
-
-        var link = "";
-
-        var last_stream = m3u8.Last().Split('/');
-        for (int i = 0; i < last_stream.Length; i++)
-        {
-            if (last_stream[i] == "media")
-            {
-                last_stream[i + 1] = "0";
-                link = string.Join("/", last_stream).Split('\n')[1];
-            }
-        }
-
-        return link;
-    }
-
     /// <inheritdoc />
     public async ValueTask<string?> GetDownloadUrlAsync(
         string url,
@@ -142,7 +115,7 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint) : ITrackC
         CancellationToken cancellationToken = default
     )
     {
-        if (track.Policy?.ToLower() == "block")
+        if (string.Equals(track.Policy, "block", StringComparison.OrdinalIgnoreCase))
         {
             throw new TrackUnavailableException("This track is not available in your country");
         }
@@ -156,46 +129,24 @@ public class TrackClient(HttpClient http, SoundcloudEndpoint endpoint) : ITrackC
             throw new TrackUnavailableException("No transcodings found");
         }
 
-        var transcoding =
-            // Progrssive/Stream - high quality
-            track.Media.Transcodings.FirstOrDefault(x =>
-                x.Quality == "hq"
-                && x.Format?.MimeType?.Contains("audio/mp4") == true
-                && x.Format.Protocol == "progressive"
-            )
-            ?? // Hls - high quality
-            track.Media.Transcodings.FirstOrDefault(x =>
-                x.Quality == "hq"
-                && x.Format?.MimeType?.Contains("audio/mp4") == true
-                && x.Format.Protocol == "hls"
-            )
-            ?? // Progrssive/Stream - standard quality
-            track.Media.Transcodings.FirstOrDefault(x =>
-                x.Quality == "sq"
-                && x.Format?.MimeType?.Contains("audio/mpeg") == true
-                && x.Format.Protocol == "progressive"
-            )
-            ?? // Hls  - standard quality
-            track.Media.Transcodings.FirstOrDefault(x =>
-                x.Quality == "sq"
-                && x.Format?.MimeType?.Contains("ogg") == true
-                && x.Format.Protocol == "hls"
-            );
+        var transcoding = track.GetPreferredTranscoding();
 
         if (transcoding is null || transcoding.Url is null)
             return null;
 
-        var trackUrl = transcoding.Url.ToString() + $"?client_id={endpoint.ClientId}";
+        var builder = new UriBuilder(transcoding.Url);
+        var query = builder.Query.TrimStart('?');
+        builder.Query =
+            (query.Length > 0 ? query + "&" : "")
+            + $"client_id={Uri.EscapeDataString(endpoint.ClientId)}";
 
-        var trackMedia = await http.ExecuteGetAsync(trackUrl, cancellationToken);
+        var trackMedia = await http.ExecuteGetAsync(builder.Uri.AbsoluteUri, cancellationToken);
 
-        var trackMediaUrl = JsonDocument
-            .Parse(trackMedia)
-            .RootElement.GetProperty("url")
-            .GetString();
+        using var document = JsonDocument.Parse(trackMedia);
+        var trackMediaUrl = document.RootElement.GetProperty("url").GetString();
 
-        return trackMediaUrl?.Contains(".m3u8") == true
-            ? await QueryTrackMp3Async(trackMediaUrl, cancellationToken)
-            : trackMediaUrl;
+        // HLS URLs must remain playlists. Rewriting a segment URL can truncate the track
+        // and no longer works for SoundCloud's fragmented MP4 streams.
+        return string.IsNullOrWhiteSpace(trackMediaUrl) ? null : trackMediaUrl;
     }
 }

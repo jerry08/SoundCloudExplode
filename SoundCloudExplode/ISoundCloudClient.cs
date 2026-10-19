@@ -56,7 +56,9 @@ public interface ISoundCloudClient
     Task<Kind> GetUrlKindAsync(string url, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Downloads a track to a file path.
+    /// Downloads progressive audio or an unencrypted, on-demand HLS stream to a file path.
+    /// Preserves the source encoding; use Track.GetPreferredTranscoding().GetFileExtension()
+    /// to choose an appropriate extension.
     /// </summary>
     ValueTask DownloadAsync(
         Track track,
