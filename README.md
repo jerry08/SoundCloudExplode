@@ -20,6 +20,7 @@
 
 **SoundCloudExplode** exposes its functionality through a single entry point — the `SoundCloudClient` class.
 Create an instance of this class and use the provided operations to send requests.
+Call `await soundcloud.InitializeAsync()` first to obtain SoundCloud's current public client ID.
 
 ### Tracks
 
@@ -31,6 +32,7 @@ To retrieve the metadata associated with a Soundcloud track, call `Tracks.GetAsy
 using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 
 var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
@@ -48,6 +50,7 @@ You can get the metadata associated with a Soundcloud playlist by calling `Playl
 using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 
 // Get a playlist basic information
 var playlist = await soundcloud.Playlists.GetAsync(
@@ -75,6 +78,7 @@ using SoundCloudExplode;
 using SoundCloudExplode.Common;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 var playlistUrl = "https://soundcloud.com/tommy-enjoy/sets/aimer";
 
 // Get all playlist tracks
@@ -100,6 +104,7 @@ You can also enumerate the tracks iteratively without waiting for the whole list
 using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 var playlistUrl = "https://soundcloud.com/tommy-enjoy/sets/aimer";
 
 await foreach (var track in soundcloud.Playlists.GetTracksAsync(playlistUrl))
@@ -115,6 +120,7 @@ If you need precise control over how many requests you send to SoundCloud, use `
 using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 var playlistUrl = "https://soundcloud.com/tommy-enjoy/sets/aimer";
 
 // Each batch corresponds to one request
@@ -139,6 +145,7 @@ using SoundCloudExplode;
 using SoundCloudExplode.Common;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 
 await foreach (var result in soundcloud.Search.GetResultsAsync("banda neira"))
 {
@@ -178,6 +185,7 @@ using SoundCloudExplode;
 using SoundCloudExplode.Common;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 
 var tracks = await soundcloud.Search.GetTracksAsync("banda neira");
 var playlists = await soundcloud.Search.GetPlaylistsAsync("banda neira");
@@ -192,12 +200,14 @@ using System.IO;
 using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 
 var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
 var trackName = string.Join("_", track.Title.Split(Path.GetInvalidFileNameChars()));
+var extension = track.GetPreferredTranscoding()?.GetFileExtension() ?? ".audio";
 
-await soundcloud.DownloadAsync(track, $@"{Environment.CurrentDirectory}\Download\{trackName}.mp3");
+await soundcloud.DownloadAsync(track, Path.Combine("Downloads", trackName + extension));
 ```
 
 You can request the download url for a particular track by calling `Tracks.GetDownloadUrlAsync(...)`:
@@ -206,8 +216,44 @@ You can request the download url for a particular track by calling `Tracks.GetDo
 using SoundCloudExplode;
 
 var soundcloud = new SoundCloudClient();
+await soundcloud.InitializeAsync();
 
 var track = await soundcloud.Tracks.GetAsync("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description");
 
 var downloadUrl = await soundcloud.Tracks.GetDownloadUrlAsync(track);
 ```
+
+The returned URL can point to progressive audio or an **HLS playlist**. Pass HLS URLs to a player that supports HLS, or use `DownloadAsync` to assemble the audio segments into a file. The library preserves the source encoding: AAC in an MP4 container uses `.m4a`, MP3 uses `.mp3`, and Opus in Ogg uses `.ogg`. It does not transcode audio.
+
+`DownloadAsync` supports complete, unencrypted HLS playlists, including fragmented MP4 initialization segments and adaptive playlists. It reports unsupported encryption, byte ranges, discontinuities, or incomplete/live playlists explicitly. A failed or cancelled download may leave a partial file.
+
+### Demo CLI
+
+The demo uses Spectre.Console prompts, metadata tables, status indicators, and download progress. Run it with the .NET 10 SDK:
+
+```sh
+dotnet run --project SoundCloudExplode.Demo.Cli
+dotnet run --project SoundCloudExplode.Demo.Cli -- "https://soundcloud.com/artist/track"
+```
+
+It accepts tracks and playlists, saves files in `Downloads` using the source format's extension, and exits with `q` or Ctrl+C. Use `--help` for usage or `--samples` to run the API examples.
+
+### Development and tests
+
+Package versions are maintained in `Directory.Packages.props`. Building the solution requires the .NET 10 SDK; the library targets .NET Standard 2.0, .NET 9, and .NET 10.
+
+The default test run uses local HTTP fixtures. Live SoundCloud tests are skipped unless explicitly enabled:
+
+```sh
+dotnet test
+```
+
+To run live integration tests in PowerShell:
+
+```powershell
+$env:SOUNDCLOUD_INTEGRATION_TESTS = "1"
+dotnet test --filter "Category=Integration"
+Remove-Item Env:SOUNDCLOUD_INTEGRATION_TESTS
+```
+
+Live tests depend on SoundCloud availability, geographic restrictions, and the continued availability of the sample tracks. CI runs the offline suite with coverage before creating release packages.
