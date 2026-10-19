@@ -5,14 +5,16 @@ using Xunit;
 
 namespace SoundCloudExplode.Tests;
 
+[Trait("Category", "Integration")]
 public class SearchSpecs
 {
-    [Theory]
+    [IntegrationTheory]
     [InlineData("adele")]
     public async Task I_can_get_results_from_a_search_query(string query)
     {
         // Arrange
         var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
 
         // Act
         var results = await soundcloud.Search.GetResultsAsync(query).CollectAsync(10);
@@ -21,12 +23,13 @@ public class SearchSpecs
         results.Should().HaveCountGreaterThanOrEqualTo(10);
     }
 
-    [Theory]
+    [IntegrationTheory]
     [InlineData("adele")]
     public async Task I_can_get_track_results_from_a_search_query(string query)
     {
         // Arrange
         var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
 
         // Act
         var videos = await soundcloud.Search.GetTracksAsync(query).CollectAsync(10);
@@ -35,12 +38,13 @@ public class SearchSpecs
         videos.Should().HaveCountGreaterThanOrEqualTo(10);
     }
 
-    [Theory]
+    [IntegrationTheory]
     [InlineData("adele")]
     public async Task I_can_get_playlist_results_from_a_search_query(string query)
     {
         // Arrange
         var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
 
         // Act
         var playlists = await soundcloud.Search.GetPlaylistsAsync(query).CollectAsync(10);
@@ -49,12 +53,13 @@ public class SearchSpecs
         playlists.Should().NotBeEmpty();
     }
 
-    [Theory]
+    [IntegrationTheory]
     [InlineData("adele")]
     public async Task I_can_get_album_results_from_a_search_query(string query)
     {
         // Arrange
         var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
 
         // Act
         var channels = await soundcloud.Search.GetAlbumsAsync(query).CollectAsync(10);
@@ -63,12 +68,13 @@ public class SearchSpecs
         channels.Should().NotBeEmpty();
     }
 
-    [Theory]
+    [IntegrationTheory]
     [InlineData("adele")]
     public async Task I_can_get_user_results_from_a_search_query(string query)
     {
         // Arrange
         var soundcloud = new SoundCloudClient();
+        await soundcloud.InitializeAsync();
 
         // Act
         var channels = await soundcloud.Search.GetUsersAsync(query).CollectAsync(10);

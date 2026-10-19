@@ -1,13 +1,13 @@
 ﻿using System.Threading.Tasks;
 using FluentAssertions;
-using SoundCloudExplode.Common;
 using Xunit;
 
 namespace SoundCloudExplode.Tests;
 
+[Trait("Category", "Integration")]
 public class TrackSpecs
 {
-    [Theory]
+    [IntegrationTheory]
     [InlineData("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description")]
     public async Task I_can_get_the_metadata_of_any_available_track(string url)
     {
@@ -22,8 +22,9 @@ public class TrackSpecs
         results.Should().NotBeNull();
     }
 
-    [Theory]
+    [IntegrationTheory]
     [InlineData("https://soundcloud.com/purityy79/dororo-op-piano-sheet-in-description")]
+    [InlineData("https://m.soundcloud.com/raden-valeri-kevin-bagaskara/dj-breakbeat-an-angel-love")]
     public async Task I_can_get_the_download_url_of_a_track(string url)
     {
         // Arrange
