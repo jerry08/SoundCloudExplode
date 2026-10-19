@@ -1,10 +1,10 @@
 <Project>
-
   <PropertyGroup>
     <Version>0.0.0-dev</Version>
     <Company>Jerro</Company>
     <Copyright>Copyright (C) Jerry Berry</Copyright>
     <LangVersion>latest</LangVersion>
+    <CSharpier_FrameworkVersion>net10.0</CSharpier_FrameworkVersion>
     <Nullable>enable</Nullable>
     <!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -18,5 +18,4 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'net472'">
     <Nullable>annotations</Nullable>
   </PropertyGroup>
-
 </Project>

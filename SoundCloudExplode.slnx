@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="favicon.ico" />
+    <File Path="favicon.png" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="SoundCloudExplode.Demo.Cli/SoundCloudExplode.Demo.Cli.csproj" />
+  <Project Path="SoundCloudExplode.Tests/SoundCloudExplode.Tests.csproj" />
+  <Project Path="SoundCloudExplode/SoundCloudExplode.csproj" />
+</Solution>
